@@ -1,0 +1,12 @@
+# Desired Model Manifest - MLOps-Platform
+#
+# This tracked manifest records product-level model intent only. It does not
+# claim that ignored local weight files are present on any given machine.
+
+desired_models:
+- id: sample-chat-small
+  repo: local/sample-chat-small
+  format: safetensors
+  serving_targets:
+  - vllm
+  purpose: Placeholder for the first story-owned chat model candidate.

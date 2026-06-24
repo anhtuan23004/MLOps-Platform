@@ -1,0 +1,14 @@
+presets:
+- id: vllm-sample-chat
+  description: Placeholder registry model served through vLLM and exposed via the local-vllm gateway alias.
+  runtime: vllm
+  model:
+    type: desired
+    id: sample-chat-small
+  gateway:
+    alias: local-vllm
+    provider: openai
+    model: local/sample-chat-small
+  requires:
+  - vllm
+  - litellm
