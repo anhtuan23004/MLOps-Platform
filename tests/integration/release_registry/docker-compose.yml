@@ -1,0 +1,11 @@
+services:
+  release-registry:
+    build:
+      context: ..
+      dockerfile: registry/Dockerfile
+    container_name: release-registry
+    volumes:
+      - ../data/release-registry:/data
+      - ../llm_local:/app/llm_local:ro
+    environment:
+      RELEASE_REGISTRY_ROOT: /data
