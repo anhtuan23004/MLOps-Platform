@@ -1,0 +1,43 @@
+services:
+  unsloth:
+    image: unsloth/unsloth:${UNSLOTH_IMAGE_TAG:-latest}
+    container_name: unsloth
+    restart: unless-stopped
+    environment:
+      JUPYTER_PASSWORD: "passd"
+      USER_PASSWORD: "12345678"
+      # JUPYTER_PORT: 8888
+      LITELLM_BASE_URL: "http://litellm:4000"
+    ports:
+      - "${JUPYTER_HOST_PORT:-8888}:8888"
+      - "${UNSLOTH_API_HOST_PORT:-8001}:8000"
+      - "${UNSLOTH_SSH_HOST_PORT:-2222}:22"
+    volumes:
+      - ./work:/workspace/work
+      - ./configs:/workspace/configs
+      - ../../models:/workspace/models
+    networks:
+      - llm-net
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: ["gpu"]
+
+  tensorboard:
+    image: unsloth/unsloth:${UNSLOTH_IMAGE_TAG:-latest}
+    container_name: unsloth-tensorboard
+    restart: unless-stopped
+    command: tensorboard --logdir /workspace/work --host 0.0.0.0 --port 6006
+    ports:
+      - "${TENSORBOARD_HOST_PORT:-6006}:6006"
+    volumes:
+      - ./work:/workspace/work
+    networks:
+      - llm-net
+networks:
+  llm-net:
+    external: true

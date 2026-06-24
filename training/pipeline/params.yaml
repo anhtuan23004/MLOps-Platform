@@ -1,0 +1,18 @@
+dataset:
+  source: data/raw
+  version_tag: v1
+
+model:
+  name: mlops-ct-model
+  base_model: local/sample-chat-small
+
+train:
+  epochs: 1
+  learning_rate: 0.0002
+  dry_run: true
+
+evaluate:
+  min_accuracy: 0.0
+
+register:
+  release_prefix: rel-ct

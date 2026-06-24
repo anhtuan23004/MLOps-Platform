@@ -1,0 +1,2 @@
+# Placeholder raw dataset files for DVC tracking.
+# Replace with real data; run `dvc add data/raw` after populating.
