@@ -1,0 +1,30 @@
+[project]
+name = "mlops-platform"
+version = "0.1.0"
+description = "Hybrid ModelOps/MLOps platform scaffold for model lifecycle infrastructure"
+requires-python = ">=3.11"
+dependencies = [
+    "huggingface-hub>=0.20.0",
+    "ruamel-yaml>=0.18.0",
+]
+
+[project.optional-dependencies]
+convert = [
+    "gguf>=0.6.0",
+    "torch",
+]
+training = [
+    "mlflow>=2.10.0",
+    "dvc[s3]>=3.0",
+    "pyyaml>=6.0",
+]
+test = [
+    "pytest>=8.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["llm_local"]

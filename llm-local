@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# llm-local — Unified CLI for MLOps-Platform infrastructure.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+PYTHON="$ROOT/.venv/bin/python"
+if [ ! -x "$PYTHON" ]; then
+  PYTHON="${LLM_LOCAL_PYTHON:-python3}"
+fi
+
+exec "$PYTHON" -m llm_local.cli "$@"

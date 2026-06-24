@@ -1,0 +1,49 @@
+# Models
+*.safetensors
+*.bin
+*.pt
+*.ckpt
+models/*/*
+models/registry.yaml
+models/*/model.yaml
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# Vendor (auto-cloned on first convert)
+vendor/
+
+# Environment
+.env
+config/active/serving.yaml
+
+# OS
+.DS_Store
+
+# Results/data
+evaluation/results/*
+training/unsloth/work/*
+observation/dashboards/*.png
+observation/dashboards/*.csv
+# datasets/*
+
+# MLOps-Platform local artifacts
+config/active/
+data/release-registry/
+training/pipeline/data/processed/
+training/pipeline/models/
+training/pipeline/evaluation/
+training/pipeline/data/pipeline/
+training/pipeline/logs/
+.dvc/cache/
+.dvc/tmp/
+evaluation/results/
+training/unsloth/work/
+observation/dashboards/*.png
+observation/dashboards/*.csv
+models/registry.yaml
+models/*/model.yaml
+models/*/*

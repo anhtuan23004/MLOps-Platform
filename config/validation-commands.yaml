@@ -1,0 +1,30 @@
+version: 1
+
+commands:
+  validate-quick:
+    command: make validate-quick
+    ladder_level: validate:quick
+    environment: local shell with Docker available
+    expected_runtime: bounded static checks; no running LLM services required
+    ci_allowed: true
+
+  test-integration:
+    command: make test-integration
+    ladder_level: test:integration
+    environment: local shell with Docker available
+    expected_runtime: compose/config and contract checks only unless story-specific commands add live services
+    ci_allowed: true
+
+  test-platform:
+    command: make test-platform
+    ladder_level: test:platform
+    environment: prepared local runtime host
+    expected_runtime: checks live Docker network, containers, and host endpoints; set SERVICE=<id> to collect staged proof for one runtime/service at a time on constrained GPU hosts
+    ci_allowed: false
+
+  release-check:
+    command: make release-check
+    ladder_level: test:release
+    environment: prepared GPU/runtime host with selected models available
+    expected_runtime: full quick checks plus strict registry and runtime checks; set SERVICE=<id> to collect staged release proof for one runtime/service at a time on constrained GPU hosts
+    ci_allowed: false

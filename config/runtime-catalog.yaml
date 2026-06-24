@@ -1,0 +1,202 @@
+version: 1
+network: llm-net
+
+formats:
+  safetensors:
+    compatible_runtimes: [vllm]
+  pytorch:
+    compatible_runtimes: [vllm]
+
+services:
+  vllm:
+    label: vLLM
+    group: serving
+    dir: serving/vllm
+    compose_file: serving/vllm/docker-compose.yml
+    container: vllm
+    image:
+      repository: vllm/vllm-openai
+      tag_env: VLLM_IMAGE_TAG
+      default_tag: v0.22.0-cu129-ubuntu2404
+    host_port:
+      env: HOST_PORT
+      default: 18000
+    container_port: 8000
+    gpu:
+      enabled: true
+      all_gpus: false
+    model:
+      path_env: VLLM_MODEL_PATH
+      select_env:
+        VLLM_MODEL_PATH: /models/{name}
+        VLLM_SERVED_MODEL_NAME: "{repo}"
+      litellm_model_env: VLLM_LITELLM_MODEL
+    eval_endpoint: http://vllm:8000
+    gateway_alias: local-vllm
+    runtime_check:
+      required: true
+      host_endpoint: http://localhost:{host_port}/health
+      healthy_states: [healthy]
+    status: true
+
+  litellm:
+    label: LiteLLM
+    group: serving
+    dir: serving/litellm
+    compose_file: serving/litellm/docker-compose.yml
+    container: litellm
+    image:
+      repository: docker.litellm.ai/berriai/litellm
+      tag_env: LITELLM_IMAGE_TAG
+      default_tag: latest
+    host_port:
+      env: HOST_PORT
+      default: 18040
+    container_port: 4000
+    gpu:
+      enabled: false
+      all_gpus: false
+    eval_endpoint: http://litellm:4000
+    runtime_check:
+      required: false
+      healthy_states: [healthy, running]
+    status: true
+
+  unsloth:
+    label: Unsloth
+    group: training
+    dir: training/unsloth
+    compose_file: training/unsloth/docker-compose.yml
+    container: unsloth
+    image:
+      repository: unsloth/unsloth
+      tag_env: UNSLOTH_IMAGE_TAG
+      default_tag: latest
+    host_ports:
+      - env: JUPYTER_HOST_PORT
+        default: 8888
+        container: 8888
+      - env: UNSLOTH_API_HOST_PORT
+        default: 8001
+        container: 8000
+      - env: UNSLOTH_SSH_HOST_PORT
+        default: 2222
+        container: 22
+    gpu:
+      enabled: true
+      all_gpus: true
+
+  mlflow:
+    label: MLflow
+    group: training
+    dir: training/mlflow
+    compose_file: training/mlflow/docker-compose.yml
+    container: mlflow
+    image:
+      repository: ghcr.io/mlflow/mlflow
+      tag_env: MLFLOW_IMAGE_TAG
+      default_tag: v2.22.0
+    host_port:
+      env: MLFLOW_HOST_PORT
+      default: 15000
+    container_port: 5000
+    gpu:
+      enabled: false
+      all_gpus: false
+    runtime_check:
+      required: false
+      host_endpoint: http://localhost:{host_port}/health
+      healthy_states: [healthy, running]
+    status: true
+
+  evaluation:
+    label: Evaluation
+    group: evaluation
+    dir: evaluation
+    compose_file: evaluation/docker-compose.yml
+    container: evaluation
+    gpu:
+      enabled: false
+      all_gpus: false
+
+  lm-eval:
+    label: lm-eval
+    group: evaluation
+    dir: evaluation
+    compose_file: evaluation/docker-compose.yml
+    container: lm-eval
+    gpu:
+      enabled: false
+      all_gpus: false
+
+  observation:
+    label: Observation batch
+    group: observation
+    dir: observation
+    compose_file: observation/docker-compose.yml
+    container: observation
+    gpu:
+      enabled: false
+      all_gpus: false
+
+  prometheus:
+    label: Prometheus
+    group: observation
+    dir: observation
+    compose_file: observation/docker-compose.yml
+    container: prometheus
+    image:
+      repository: prom/prometheus
+      tag_env: PROMETHEUS_IMAGE_TAG
+      default_tag: latest
+    host_port:
+      env: PROMETHEUS_HOST_PORT
+      default: 18093
+    container_port: 9090
+    gpu:
+      enabled: false
+      all_gpus: false
+    runtime_check:
+      required: true
+      host_endpoint: http://localhost:{host_port}/-/healthy
+      healthy_states: [healthy, running]
+
+  grafana:
+    label: Grafana
+    group: observation
+    dir: observation
+    compose_file: observation/docker-compose.yml
+    container: grafana
+    image:
+      repository: grafana/grafana
+      tag_env: GRAFANA_IMAGE_TAG
+      default_tag: latest
+    host_port:
+      env: GRAFANA_HOST_PORT
+      default: 18094
+    container_port: 3000
+    gpu:
+      enabled: false
+      all_gpus: false
+    runtime_check:
+      required: true
+      host_endpoint: http://localhost:{host_port}/api/health
+      healthy_states: [healthy, running]
+
+  nvidia-gpu-exporter:
+    label: NVIDIA GPU exporter
+    group: observation
+    dir: observation
+    compose_file: observation/docker-compose.yml
+    container: nvidia-gpu-exporter
+    image:
+      repository: utkuozdemir/nvidia_gpu_exporter
+      tag_env: GPU_EXPORTER_IMAGE_TAG
+      default_tag: latest
+    host_port:
+      env: GPU_EXPORTER_HOST_PORT
+      default: 9835
+    container_port: 9835
+    gpu:
+      enabled: true
+      all_gpus: false
