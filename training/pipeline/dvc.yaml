@@ -1,5 +1,5 @@
 vars:
-  - params.yaml
+  - ../../config/pipeline/params.yaml
 
 stages:
   prepare_data:
@@ -7,7 +7,7 @@ stages:
     deps:
       - ../../llm_local/pipeline/stages/prepare_data.py
       - ../../llm_local/pipeline/stages/common.py
-      - params.yaml
+      - ../../config/pipeline/params.yaml
     params:
       - dataset.source
       - dataset.version_tag
@@ -20,7 +20,7 @@ stages:
       - ../../llm_local/pipeline/stages/train.py
       - ../../llm_local/pipeline/stages/common.py
       - data/processed/dataset_manifest.json
-      - params.yaml
+      - ../../config/pipeline/params.yaml
     params:
       - model.name
       - model.base_model
@@ -36,7 +36,7 @@ stages:
       - ../../llm_local/pipeline/stages/evaluate.py
       - ../../llm_local/pipeline/stages/common.py
       - models/artifacts/run_manifest.json
-      - params.yaml
+      - ../../config/pipeline/params.yaml
     params:
       - evaluate.min_accuracy
     outs:
@@ -49,7 +49,7 @@ stages:
       - ../../llm_local/pipeline/stages/common.py
       - evaluation/results/ct_eval_report.json
       - models/artifacts/run_manifest.json
-      - params.yaml
+      - ../../config/pipeline/params.yaml
     params:
       - register.release_prefix
     outs:

@@ -21,7 +21,7 @@ DESIRED_REQUIRED_FIELDS = {"id", "repo", "format", "serving_targets"}
 HEADER = (
     "# Local Model Inventory - MLOps-Platform\n"
     "# Auto-generated from ignored per-model sidecar files.\n"
-    "# Product-level model intent lives in models/desired-models.yaml.\n\n"
+    "# Product-level model intent lives in config/models/desired-models.yaml.\n\n"
 )
 
 

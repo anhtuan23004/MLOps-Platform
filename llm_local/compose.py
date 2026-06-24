@@ -29,6 +29,13 @@ def compose_args(*args: str) -> list[str]:
     return [*compose_command(), *args]
 
 
+def compose_with_env(service_id: str, *args: str) -> list[str]:
+    from llm_local.config_paths import ensure_local_env
+
+    env_file = ensure_local_env(service_id)
+    return compose_args("--env-file", str(env_file), *args)
+
+
 def _command_works(command: list[str]) -> bool:
     try:
         result = subprocess.run(

@@ -78,7 +78,10 @@ Proof expectations live in [`docs/TEST_MATRIX.md`](docs/TEST_MATRIX.md).
 
 Architecture overview: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-- `models/`: model weights, manifests (`desired-models.yaml`, `presets.yaml`); tooling in `llm_local/models/`
+Central configuration: [`config/README.md`](config/README.md) — run `./llm-local config init` first.
+
+- `config/`: all operator-tunable settings (env, pipeline params, presets, catalog)
+- `models/`: model weights and generated inventory; manifests in `config/models/`
 - `training/`: local fine-tuning environments and scripts.
 - `evaluation/`: latency and quality evaluation tooling.
 - `serving/`: vLLM runtime and LiteLLM gateway configuration.

@@ -102,20 +102,45 @@ llm_local/
     validate_evidence.py # Story evidence block validation
 ```
 
-**Rule:** commands that mutate runtime state read `config/runtime-catalog.yaml`
-and release/preset metadata before writing `.env` files or restarting containers.
+**Rule:** commands that mutate runtime state read `config/platform.yaml` and
+`config/runtime-catalog.yaml`, then write `config/env/*.env` or restart containers.
+
+### Configuration plane (`config/`)
+
+All operator-tunable settings are centralized under `config/`. See
+`config/README.md` and the manifest `config/platform.yaml`.
+
+| Path | Role |
+| --- | --- |
+| `platform.yaml` | Index of every config file and env profile |
+| `runtime-catalog.yaml` | Services, images, ports, `env_profile` per service |
+| `validation-commands.yaml` | Harness validation ladder |
+| `models/desired-models.yaml` | Product model intent |
+| `models/presets.yaml` | Serving presets |
+| `pipeline/params.yaml` | Continuous training parameters (DVC) |
+| `dvc/config.example` | S3 remote template |
+| `litellm/config.yaml` | Gateway routing |
+| `env/*.env.example` | Service env templates |
+| `env/*.env` | Local overrides (gitignored) |
+
+```bash
+./llm-local config init    # copy env templates → config/env/*.env
+```
+
+Code resolves paths via `llm_local/config_paths.py`. Docker Compose loads
+`--env-file config/env/<profile>.env` for each service.
 
 ### Data plane
 
 
-| Store                               | Role                                      | Durability  | Git     |
-| ----------------------------------- | ----------------------------------------- | ----------- | ------- |
-| `models/desired-models.yaml`        | Product intent (which models to hold)     | Committed   | yes     |
-| `models/<id>/model.yaml`            | Per-model sidecar (path, format, targets) | Local       | ignored |
-| `models/registry.yaml`              | Assembled inventory (from sidecars)       | Generated   | ignored |
-| `models/presets.yaml`               | Serving preset definitions                | Committed   | yes     |
-| `training/pipeline/data/raw/`       | Raw training inputs                       | DVC-tracked | partial |
-| `training/pipeline/data/processed/` | Pipeline stage outputs                    | DVC-tracked | no      |
+| Store | Role | Durability | Git |
+| --- | --- | --- | --- |
+| `config/models/desired-models.yaml` | Product intent (which models to hold) | Committed | yes |
+| `models/<id>/model.yaml` | Per-model sidecar (path, format, targets) | Local | ignored |
+| `models/registry.yaml` | Assembled inventory (from sidecars) | Generated | ignored |
+| `config/models/presets.yaml` | Serving preset definitions | Committed | yes |
+| `training/pipeline/data/raw/` | Raw training inputs | DVC-tracked | partial |
+| `training/pipeline/data/processed/` | Pipeline stage outputs | DVC-tracked | no |
 
 
 Model weights and large artifacts are **not** product truth in git; lineage is
@@ -157,12 +182,18 @@ Only **vLLM** is the promoted production runtime in the current catalog;
 MLOps-Platform/
 ├── llm_local/              # Control plane (Python package)
 ├── llm-local               # Bash shim → python -m llm_local.cli
-├── config/
-│   ├── runtime-catalog.yaml    # Services, images, ports, format→runtime map
-│   └── validation-commands.yaml
-├── models/                 # Data only: weights, manifests, convert.sh
+├── config/                 # All operator config (see config/README.md)
+│   ├── platform.yaml           # Config manifest
+│   ├── runtime-catalog.yaml
+│   ├── validation-commands.yaml
+│   ├── models/                 # desired-models, presets
+│   ├── pipeline/params.yaml
+│   ├── env/                    # per-service .env templates + local overrides
+│   ├── litellm/config.yaml
+│   └── dvc/config.example
+├── models/                 # Weights + convert.sh only (manifests in config/)
 ├── training/
-│   ├── pipeline/           # DVC: dvc.yaml, params.yaml, data/
+│   ├── pipeline/           # DVC: dvc.yaml, data/ (params in config/)
 │   ├── mlflow/             # MLflow server compose
 │   └── unsloth/            # Interactive GPU training environment
 ├── evaluation/             # Latency benchmark + lm-eval harness
@@ -214,7 +245,7 @@ Operator: attach-eval → submit → approve → promote --to dev [--apply-servi
 Orchestration is **DVC stage DAG**, not a separate workflow engine. See
 `docs/decisions/002-mlflow-dvc-s3-continuous-training.md`.
 
-`train.dry_run: true` in `params.yaml` allows CI/laptop runs without GPU;
+`train.dry_run: true` in `config/pipeline/params.yaml` allows CI/laptop runs without GPU;
 real weights require a GPU VM and `train.dry_run: false`.
 
 ### 2. Manual model onboarding
@@ -222,7 +253,8 @@ real weights require a GPU VM and `train.dry_run: false`.
 ```text
 llm-local model download <repo> → sidecar model.yaml → assemble registry.yaml
 Optional: models/convert.sh hf2gguf <dir>
-llm-local preset add / apply → config render → serving .env
+llm-local config init
+llm-local preset add / apply → config render → config/env/*.env
 llm-local serve vllm up && serve litellm up
 ```
 
@@ -277,7 +309,7 @@ Groups: `serving`, `training`, `evaluation`, `observation`.
 ## State and dependency rules
 
 1. **Product docs** define intended behavior; **stories** define selected slices.
-2. **Generated local state** (`.env`, `registry.yaml`, DVC outs) is not durable
+2. **Generated local state** (`config/env/*.env`, `models/registry.yaml`, DVC outs) is not durable
   product truth without a committed contract or release record.
 3. **Promotion** advances release metadata first; serving changes are explicit
   (`--apply-serving` or preset render).

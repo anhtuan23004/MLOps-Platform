@@ -7,8 +7,8 @@ import subprocess
 import sys
 
 from llm_local.catalog import ROOT
+from llm_local.config_paths import PIPELINE_DIR
 
-PIPELINE_DIR = ROOT / "training" / "pipeline"
 MLFLOW_DIR = ROOT / "training" / "mlflow"
 STAGES = ("prepare_data", "train", "evaluate", "register")
 STAGE_MODULES = {
@@ -69,16 +69,16 @@ def ensure_network_catalog() -> None:
 
 
 def mlflow_up() -> int:
-    from .compose import compose_args
+    from .compose import compose_with_env
 
     ensure_network_catalog()
-    return subprocess.run(compose_args("up", "-d"), cwd=MLFLOW_DIR, check=False).returncode
+    return subprocess.run(compose_with_env("mlflow", "up", "-d"), cwd=MLFLOW_DIR, check=False).returncode
 
 
 def mlflow_down() -> int:
-    from .compose import compose_args
+    from .compose import compose_with_env
 
-    return subprocess.run(compose_args("down"), cwd=MLFLOW_DIR, check=False).returncode
+    return subprocess.run(compose_with_env("mlflow", "down"), cwd=MLFLOW_DIR, check=False).returncode
 
 
 def print_cron_install() -> int:

@@ -29,7 +29,7 @@ Environment:
 Training pipeline logs a run and registers a model version:
 
 - **Experiment**: `mlops-platform-continuous-training`
-- **Registered model name**: from `params.yaml` → `model.name`
+- **Registered model name**: from `config/pipeline/params.yaml` → `model.name`
 
 Release registry (`data/release-registry/`) references MLflow run ID and model URI
 in the `register` pipeline stage.

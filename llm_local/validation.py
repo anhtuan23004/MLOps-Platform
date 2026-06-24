@@ -84,7 +84,8 @@ def run_integration() -> int:
 def check_training_pipeline(runner: ValidationRunner) -> None:
     runner.section("Continuous Training Pipeline")
     runner.check("pipeline dvc.yaml exists", ["test", "-f", "training/pipeline/dvc.yaml"])
-    runner.check("pipeline params.yaml exists", ["test", "-f", "training/pipeline/params.yaml"])
+    runner.check("platform.yaml exists", ["test", "-f", "config/platform.yaml"])
+    runner.check("pipeline params.yaml exists", ["test", "-f", "config/pipeline/params.yaml"])
     runner.check("mlflow compose exists", ["test", "-f", "training/mlflow/docker-compose.yml"])
     runner.check("pipeline runner syntax", [sys.executable, "-m", "py_compile", "llm_local/pipeline/runner.py"])
     runner.check(
@@ -169,14 +170,14 @@ def check_compose(runner: ValidationRunner) -> None:
 
 def check_models(runner: ValidationRunner, *, metadata_only: bool) -> None:
     runner.section("Model Management")
-    runner.check("desired-models.yaml exists", ["test", "-f", "models/desired-models.yaml"])
-    runner.check("presets.yaml exists", ["test", "-f", "models/presets.yaml"])
+    runner.check("desired-models.yaml exists", ["test", "-f", "config/models/desired-models.yaml"])
+    runner.check("presets.yaml exists", ["test", "-f", "config/models/presets.yaml"])
     runner.check("convert.sh executable", ["test", "-x", "models/convert.sh"])
     runner.check("model registry module syntax", [sys.executable, "-m", "py_compile", "llm_local/models/registry.py"])
     runner.check("model manage module syntax", [sys.executable, "-m", "py_compile", "llm_local/models/manage.py"])
     runner.check("model presets module syntax", [sys.executable, "-m", "py_compile", "llm_local/models/presets.py"])
     runner.check("desired model manifest validates", [
-        sys.executable, "-m", "llm_local.models.registry", "--desired", "models/desired-models.yaml",
+        sys.executable, "-m", "llm_local.models.registry", "--desired", "config/models/desired-models.yaml",
     ])
     if not metadata_only:
         runner.check("registry.yaml exists", ["test", "-f", "models/registry.yaml"])
@@ -200,7 +201,7 @@ def check_scripts(runner: ValidationRunner) -> None:
             "-c",
             f"{sys.executable} -m py_compile llm_local/*.py llm_local/models/*.py "
             f"llm_local/releases/*.py llm_local/pipeline/*.py llm_local/pipeline/stages/*.py "
-            f"llm_local/ops/*.py",
+            f"llm_local/ops/*.py llm_local/config_paths.py",
         ],
     )
     runner.check("llm-local shim syntax", ["bash", "-n", "llm-local"])
@@ -248,7 +249,9 @@ def check_images(runner: ValidationRunner) -> None:
                     failures.append(f"{service_id}: compose image does not include catalog default tag {tag}")
         env_key = image.get("tag_env")
         if env_key:
-            example = service_dir(service_id) / ".env.example"
+            from llm_local.config_paths import service_env_paths
+
+            example, _local = service_env_paths(service_id)
             if example.exists():
                 values = parse_env_file(example)
                 if env_key in values and values[env_key] != tag:

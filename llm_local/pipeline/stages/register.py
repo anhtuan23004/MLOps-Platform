@@ -29,7 +29,7 @@ def main() -> int:
         name=f"CT {run_manifest.get('model_name', 'model')}",
         source_artifact=str(run_manifest.get("base_model", "unknown")),
         dataset_versions=dataset_manifest.get("splits", {}),
-        training_config_ref=f"training/pipeline/params.yaml#mlflow={run_manifest.get('mlflow', {}).get('run_id')}",
+        training_config_ref=f"config/pipeline/params.yaml#mlflow={run_manifest.get('mlflow', {}).get('run_id')}",
         created_by="continuous-training",
     )
     store.attach_eval(

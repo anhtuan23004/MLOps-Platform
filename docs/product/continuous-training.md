@@ -28,7 +28,7 @@ flowchart LR
 ./llm-local train mlflow up
 
 # Initialize DVC remote (first time on host)
-cp training/pipeline/.dvc/config.example training/pipeline/.dvc/config
+cp config/dvc/config.example training/pipeline/.dvc/config
 # edit bucket URL, set AWS_* env vars
 
 # Run full continuous training pipeline
@@ -53,7 +53,7 @@ cp training/pipeline/.dvc/config.example training/pipeline/.dvc/config
 The `register` stage creates a **draft** release with:
 
 - `dataset_versions` from DVC manifest
-- `training_config_ref` → `params.yaml` + MLflow run ID
+- `training_config_ref` → `config/pipeline/params.yaml` + MLflow run ID
 - `eval_report_ref` → pipeline eval output
 
 Operator flow after successful CT run:

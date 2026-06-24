@@ -6,7 +6,8 @@ import sys
 from ruamel.yaml import YAML
 
 from llm_local.catalog import ROOT, format_targets, runtime_env_map
-from llm_local.compose import compose_args
+from llm_local.compose import compose_with_env
+from llm_local.config_paths import ensure_local_env
 from llm_local.models.paths import MODELS_DATA_DIR, REGISTRY_FILE
 from llm_local.models.registry import assemble, model_targets
 
@@ -317,18 +318,7 @@ def selection_values(match):
 def select_model(model_id, runtime="vllm", restart=False):
     match = resolve_model(model_id, runtime=runtime)
     cfg = RUNTIME_ENV_MAP[runtime]
-    env_dir = os.path.join(ROOT_DIR, cfg["dir"])
-    env_file = os.path.join(env_dir, ".env")
-
-    # Create .env from .env.example if missing
-    if not os.path.isfile(env_file):
-        example = os.path.join(env_dir, ".env.example")
-        if os.path.isfile(example):
-            import shutil as _shutil
-            _shutil.copy2(example, env_file)
-        else:
-            print(f"[!] {env_file} not found.")
-            sys.exit(1)
+    env_file = str(ensure_local_env(runtime))
 
     with open(env_file) as f:
         lines = f.readlines()
@@ -358,7 +348,9 @@ def select_model(model_id, runtime="vllm", restart=False):
 
     if restart:
         import subprocess
-        subprocess.run(compose_args("up", "-d"), cwd=env_dir)
+
+        env_dir = os.path.join(ROOT_DIR, cfg["dir"])
+        subprocess.run(compose_with_env(runtime, "up", "-d"), cwd=env_dir)
 
 
 if __name__ == "__main__":

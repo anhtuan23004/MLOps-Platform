@@ -1,7 +1,6 @@
 """Serving preset commands for workflow-level model switching."""
 
 import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -9,7 +8,8 @@ from pathlib import Path
 from ruamel.yaml import YAML
 
 from llm_local.catalog import ROOT, gateway_alias, litellm_model_keys
-from llm_local.compose import compose_args
+from llm_local.compose import compose_with_env
+from llm_local.config_paths import ACTIVE_SERVING_STATE, ensure_local_env
 from llm_local.models.manage import (
     RUNTIME_ENV_MAP,
     path_has_separator,
@@ -20,9 +20,8 @@ from llm_local.models.manage import (
 from llm_local.models.paths import PRESETS_FILE
 
 yaml = YAML()
-STATE_DIR = ROOT / "config" / "active"
-ACTIVE_FILE = STATE_DIR / "serving.yaml"
-LITELLM_DIR = ROOT / "serving" / "litellm"
+STATE_DIR = ACTIVE_SERVING_STATE.parent
+ACTIVE_FILE = ACTIVE_SERVING_STATE
 
 LITELLM_MODEL_KEYS = litellm_model_keys()
 
@@ -207,15 +206,8 @@ def show_active():
     yaml.dump(load_active_state(), sys.stdout)
 
 
-def ensure_env_file(env_dir):
-    env_file = env_dir / ".env"
-    if env_file.is_file():
-        return env_file
-    example = env_dir / ".env.example"
-    if not example.is_file():
-        print(f"ERROR: missing env file and example: {env_file}")
-        sys.exit(1)
-    shutil.copy2(example, env_file)
+def ensure_env_file(service_id: str):
+    env_file = ensure_local_env(service_id)
     return env_file
 
 
@@ -235,8 +227,10 @@ def update_env(env_file, replacements):
     env_file.write_text("".join(new_lines))
 
 
-def restart_compose(relative_dir):
-    subprocess.run(compose_args("up", "-d"), cwd=ROOT / relative_dir, check=True)
+def restart_compose(service_id: str):
+    from llm_local.catalog import service_dir
+
+    subprocess.run(compose_with_env(service_id, "up", "-d"), cwd=service_dir(service_id), check=True)
 
 
 def validate_preset(preset):
@@ -290,8 +284,8 @@ def apply_preset(preset_id, restart=False, dry_run=False, render=False):
         if dry_run:
             print(f"[*] Would restart {runtime} and litellm")
         else:
-            restart_compose(RUNTIME_ENV_MAP[runtime]["dir"])
-            restart_compose("serving/litellm")
+            restart_compose(runtime)
+            restart_compose("litellm")
 
 
 def render_active(state=None, dry_run=False):
@@ -314,7 +308,7 @@ def render_active(state=None, dry_run=False):
         if dry_run:
             print(f"[*] Would keep {runtime} model env on placeholder desired model {model.get('id')}")
         else:
-            print(f"[*] Preset {active.get('preset_id')} references desired model {model.get('id')}; update serving/vllm/.env manually or add a concrete registry preset before startup.")
+            print(f"[*] Preset {active.get('preset_id')} references desired model {model.get('id')}; update config/env/vllm.env manually or add a concrete registry preset before startup.")
 
     gateway = active.get("gateway") or {}
     litellm_model = gateway.get("litellm_model")
@@ -325,7 +319,7 @@ def render_active(state=None, dry_run=False):
     if dry_run:
         print(f"[*] Would render LiteLLM env: {replacements}")
         return
-    litellm_env = ensure_env_file(LITELLM_DIR)
+    litellm_env = ensure_env_file("litellm")
     update_env(litellm_env, replacements)
     print(f"[+] Rendered LiteLLM {gateway.get('alias')} -> {litellm_model}")
 

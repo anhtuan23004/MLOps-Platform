@@ -9,7 +9,7 @@ training. It is the source of truth for which data version produced which model.
 
 Production direction: **S3-compatible remote** (AWS S3 or MinIO).
 
-Configure from `training/pipeline/.dvc/config.example`:
+Configure from `config/dvc/config.example` (copy to `training/pipeline/.dvc/config`):
 
 ```ini
 [core]
@@ -34,7 +34,7 @@ Environment variables:
 
 ## Triggers
 
-1. **Data-driven**: `dvc repro` when `data/raw/` or `params.yaml` changes.
+1. **Data-driven**: `dvc repro` when `data/raw/` or `config/pipeline/params.yaml` changes.
 2. **Scheduled**: cron calls `./llm-local train pipeline run` (see continuous-training.md).
 
 ## Integration

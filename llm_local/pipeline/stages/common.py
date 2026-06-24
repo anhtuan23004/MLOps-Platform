@@ -11,14 +11,14 @@ from typing import Any
 
 from ruamel.yaml import YAML
 
-from llm_local.catalog import ROOT
+from llm_local.config_paths import PIPELINE_PARAMS_FILE, PIPELINE_DIR
 
-PIPELINE_ROOT = ROOT / "training" / "pipeline"
+PIPELINE_ROOT = PIPELINE_DIR
 _yaml = YAML(typ="safe")
 
 
 def load_params() -> dict[str, Any]:
-    with (PIPELINE_ROOT / "params.yaml").open() as handle:
+    with PIPELINE_PARAMS_FILE.open() as handle:
         return _yaml.load(handle) or {}
 
 

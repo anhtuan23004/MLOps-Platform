@@ -11,6 +11,7 @@ services:
   vllm:
     label: vLLM
     group: serving
+    env_profile: vllm
     dir: serving/vllm
     compose_file: serving/vllm/docker-compose.yml
     container: vllm
@@ -42,6 +43,7 @@ services:
   litellm:
     label: LiteLLM
     group: serving
+    env_profile: litellm
     dir: serving/litellm
     compose_file: serving/litellm/docker-compose.yml
     container: litellm
@@ -65,6 +67,7 @@ services:
   unsloth:
     label: Unsloth
     group: training
+    env_profile: unsloth
     dir: training/unsloth
     compose_file: training/unsloth/docker-compose.yml
     container: unsloth
@@ -89,6 +92,7 @@ services:
   mlflow:
     label: MLflow
     group: training
+    env_profile: mlflow
     dir: training/mlflow
     compose_file: training/mlflow/docker-compose.yml
     container: mlflow
@@ -142,6 +146,7 @@ services:
   prometheus:
     label: Prometheus
     group: observation
+    env_profile: observation
     dir: observation
     compose_file: observation/docker-compose.yml
     container: prometheus
@@ -164,6 +169,7 @@ services:
   grafana:
     label: Grafana
     group: observation
+    env_profile: observation
     dir: observation
     compose_file: observation/docker-compose.yml
     container: grafana
@@ -186,6 +192,7 @@ services:
   nvidia-gpu-exporter:
     label: NVIDIA GPU exporter
     group: observation
+    env_profile: observation
     dir: observation
     compose_file: observation/docker-compose.yml
     container: nvidia-gpu-exporter

@@ -11,11 +11,7 @@ import sys
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-from llm_local.catalog import format_targets, preflight_services
+from llm_local.catalog import ROOT, format_targets, load_service_env, preflight_services
 from llm_local.models.registry import model_targets
 
 
@@ -31,19 +27,7 @@ def run(*cmd: str) -> subprocess.CompletedProcess[str]:
 
 
 def load_env(service: str) -> dict[str, str]:
-    spec = SERVICES[service]
-    env: dict[str, str] = {}
-    for name in (".env.example", ".env"):
-        path = ROOT / spec["dir"] / name
-        if not path.exists():
-            continue
-        for raw in path.read_text().splitlines():
-            line = raw.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            key, value = line.split("=", 1)
-            env[key.strip()] = os.path.expandvars(value.strip().strip('"').strip("'"))
-    return env
+    return load_service_env(service)
 
 
 def container_state(name: str) -> str:

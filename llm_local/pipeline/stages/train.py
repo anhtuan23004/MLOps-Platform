@@ -76,7 +76,7 @@ def main() -> int:
         "trained_at": utc_now(),
         "dry_run": dry_run,
         "mlflow": mlflow_info,
-        "params_ref": "params.yaml",
+        "params_ref": "config/pipeline/params.yaml",
     }
 
     out = PIPELINE_ROOT / "models/artifacts/run_manifest.json"

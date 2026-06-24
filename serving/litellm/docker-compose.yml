@@ -11,7 +11,7 @@ services:
     ports:
       - "${HOST_PORT:-18040}:${CONTAINER_PORT:-4000}"
     volumes:
-      - ./config.yaml:/app/config.yaml:ro
+      - ../../config/litellm/config.yaml:/app/config.yaml:ro
     networks:
       - llm-net
     restart: unless-stopped

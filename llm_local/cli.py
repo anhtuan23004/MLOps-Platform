@@ -10,7 +10,7 @@ from typing import Sequence
 
 from . import validation
 from .catalog import ROOT, eval_targets, network_name, service, service_dir, services_by_group, status_services
-from .compose import compose_args
+from .compose import compose_args, compose_with_env
 
 
 PYTHON = sys.executable
@@ -32,7 +32,8 @@ Commands:
   release create|show|list|attach-eval|submit|approve|promote|rollback|validate
                                                   Manage model release promotion registry
   preset list|show|add|apply|active               Manage serving presets
-  config render [--dry-run]                       Render active preset into runtime .env files
+  config init                                      Copy config/env/*.env.example → local .env files
+  config render [--dry-run]                       Render active preset into config/env files
   eval run [--target {targets}] [--model NAME] [--num-requests N] [--prompt TEXT] [--api-key KEY]
   eval quality                                    Run lm-eval harness
   serve <{serving}> [up|down]                     Manage serving
@@ -70,10 +71,10 @@ def compose(service_id: str, action: str) -> int:
     if action == "up":
         ensure_network()
         run([PYTHON, "-m", "llm_local.ops.preflight", service_id])
-        run(compose_args("up", "-d"), cwd=service_dir(service_id))
+        run(compose_with_env(service_id, "up", "-d"), cwd=service_dir(service_id))
         return 0
     if action == "down":
-        run(compose_args("down"), cwd=service_dir(service_id))
+        run(compose_with_env(service_id, "down"), cwd=service_dir(service_id))
         return 0
     print("ERROR: action must be up or down")
     return 1
@@ -143,11 +144,25 @@ def preset(args: list[str]) -> int:
 
 
 def config(args: list[str]) -> int:
-    if args[:1] != ["render"]:
+    if not args:
         usage()
         return 1
-    run([PYTHON, "-m", "llm_local.models.presets", "render", *args[1:]])
-    return 0
+    sub = args[0]
+    if sub == "init":
+        from llm_local.config_paths import init_local_env_files
+
+        created = init_local_env_files()
+        if not created:
+            print("[*] All config/env/*.env files already exist")
+            return 0
+        for path in created:
+            print(f"[+] Created {path.relative_to(ROOT)}")
+        return 0
+    if sub == "render":
+        run([PYTHON, "-m", "llm_local.models.presets", "render", *args[1:]])
+        return 0
+    usage()
+    return 1
 
 
 def eval_command(args: list[str]) -> int:
@@ -214,11 +229,11 @@ def observe(args: list[str]) -> int:
     action = args[0] if args else "up"
     if action == "up":
         ensure_network()
-        run(compose_args("up", "-d"), cwd=ROOT / "observation")
+        run(compose_with_env("prometheus", "up", "-d"), cwd=ROOT / "observation")
     elif action == "down":
-        run(compose_args("down"), cwd=ROOT / "observation")
+        run(compose_with_env("prometheus", "down"), cwd=ROOT / "observation")
     elif action == "batch":
-        run(compose_args("--profile", "batch", "run", "--rm", "observation"), cwd=ROOT / "observation")
+        run(compose_with_env("prometheus", "--profile", "batch", "run", "--rm", "observation"), cwd=ROOT / "observation")
     else:
         usage()
         return 1

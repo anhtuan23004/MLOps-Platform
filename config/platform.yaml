@@ -1,0 +1,34 @@
+# Central configuration manifest — MLOps-Platform
+# All operator-tunable settings live under config/. Service compose files
+# and DVC pipeline data remain in their workload directories.
+
+version: 1
+
+paths:
+  runtime_catalog: config/runtime-catalog.yaml
+  validation_commands: config/validation-commands.yaml
+  desired_models: config/models/desired-models.yaml
+  presets: config/models/presets.yaml
+  pipeline_params: config/pipeline/params.yaml
+  dvc_config_example: config/dvc/config.example
+  litellm_config: config/litellm/config.yaml
+  release_registry_default: data/release-registry
+  active_serving_state: config/active/serving.yaml
+
+# env_profile keys referenced by config/runtime-catalog.yaml → services.*.env_profile
+env:
+  vllm:
+    example: config/env/vllm.env.example
+    local: config/env/vllm.env
+  litellm:
+    example: config/env/litellm.env.example
+    local: config/env/litellm.env
+  mlflow:
+    example: config/env/mlflow.env.example
+    local: config/env/mlflow.env
+  unsloth:
+    example: config/env/unsloth.env.example
+    local: config/env/unsloth.env
+  observation:
+    example: config/env/observation.env.example
+    local: config/env/observation.env

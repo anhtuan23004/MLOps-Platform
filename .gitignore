@@ -18,6 +18,8 @@ vendor/
 
 # Environment
 .env
+config/env/*.env
+!config/env/*.env.example
 config/active/serving.yaml
 
 # OS

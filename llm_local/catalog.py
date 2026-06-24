@@ -70,11 +70,12 @@ def host_port(service_id: str) -> int | None:
 
 
 def load_service_env(service_id: str) -> dict[str, str]:
+    from llm_local.config_paths import service_env_paths
+
     env: dict[str, str] = {}
-    directory = service_dir(service_id)
-    for name in (".env.example", ".env"):
-        path = directory / name
-        if not path.exists():
+    example, local = service_env_paths(service_id)
+    for path in (example, local):
+        if not path.is_file():
             continue
         for raw in path.read_text().splitlines():
             line = raw.strip()
