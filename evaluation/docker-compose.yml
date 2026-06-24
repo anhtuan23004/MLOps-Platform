@@ -1,0 +1,35 @@
+services:
+  evaluation:
+    build: .
+    container_name: evaluation
+    volumes:
+      - ./scripts:/app/scripts
+      - ./results:/app/results
+    networks:
+      - llm-net
+
+  lm-eval:
+    build: .
+    container_name: lm-eval
+    profiles:
+      - quality
+    entrypoint: ["/app/scripts/run_lm_eval.sh"]
+    environment:
+      LM_EVAL_MODEL_TYPE: ${LM_EVAL_MODEL_TYPE:-local-chat-completions}
+      LM_EVAL_MODEL: ${LM_EVAL_MODEL:-local/sample-chat-small}
+      LM_EVAL_BASE_URL: ${LM_EVAL_BASE_URL:-http://vllm:8000/v1/chat/completions}
+      LM_EVAL_TASKS: ${LM_EVAL_TASKS:-gsm8k}
+      LM_EVAL_BATCH_SIZE: ${LM_EVAL_BATCH_SIZE:-1}
+      LM_EVAL_LIMIT: ${LM_EVAL_LIMIT:-10}
+      LM_EVAL_NUM_FEWSHOT: ${LM_EVAL_NUM_FEWSHOT:-0}
+      LM_EVAL_OUTPUT_PATH: ${LM_EVAL_OUTPUT_PATH:-/app/results/lm-eval}
+      LM_EVAL_EXTRA_ARGS: ${LM_EVAL_EXTRA_ARGS:-}
+    volumes:
+      - ./scripts:/app/scripts
+      - ./results:/app/results
+    networks:
+      - llm-net
+
+networks:
+  llm-net:
+    external: true

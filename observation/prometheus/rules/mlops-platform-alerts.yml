@@ -1,0 +1,38 @@
+groups:
+  - name: mlops-platform-runtime
+    rules:
+      - alert: MlopsPlatformServiceDown
+        expr: up{job=~"vllm|litellm"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MLOps-Platform service {{ $labels.job }} is down"
+          runbook: "docs/runbooks/observability-alerts.md"
+
+      - alert: MlopsPlatformVramHigh
+        expr: (nvidia_gpu_memory_used_bytes / nvidia_gpu_memory_total_bytes) > 0.90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "GPU VRAM usage is above 90%"
+          runbook: "docs/runbooks/observability-alerts.md"
+
+      - alert: MlopsPlatformVllmLatencyP95High
+        expr: histogram_quantile(0.95, rate(vllm:e2e_request_latency_seconds_bucket[5m])) > 30
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "vLLM p95 request latency is high"
+          runbook: "docs/runbooks/observability-alerts.md"
+
+      - alert: MlopsPlatformLiteLlmErrorRateHigh
+        expr: (sum(rate(litellm_proxy_failed_requests_total[5m])) / clamp_min(sum(rate(litellm_proxy_total_requests[5m])), 1)) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "LiteLLM error rate is above 5%"
+          runbook: "docs/runbooks/observability-alerts.md"
