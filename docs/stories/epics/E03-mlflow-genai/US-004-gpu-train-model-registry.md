@@ -2,7 +2,7 @@
 
 ## Status
 
-planned
+in_progress
 
 ## Lane
 
@@ -66,14 +66,17 @@ After this story:
 ## Evidence
 
 <!-- evidence-metadata
-validated_at:
-host_type: gpu-runtime
-gpu:
+validated_at: 2026-06-26
+host_type: local
+gpu: none
 commands:
+- .venv/bin/python -m pytest tests/test_training_pipeline.py tests/test_us004_train.py -q
+- make validate-quick
 stale_when:
 - train.py changes
-- Unsloth image tag changes
-- params.yaml model.base_model changes
+- unsloth_runner.py changes
+- finetune_lora.py changes
 -->
 
-Pending GPU VM proof.
+Unit proof: pytest 5/5 (pipeline dry-run + US-004 simulate/register mocks).
+GPU VM full repro documented in `docs/runbooks/continuous-training-gpu-vm.md` (pending).

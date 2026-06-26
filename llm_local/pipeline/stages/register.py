@@ -42,6 +42,8 @@ def main() -> int:
         "release_id": release_id,
         "registered_at": utc_now(),
         "mlflow_run_id": run_manifest.get("mlflow", {}).get("run_id"),
+        "mlflow_model_uri": run_manifest.get("mlflow", {}).get("model_uri"),
+        "mlflow_model_version": run_manifest.get("mlflow", {}).get("model_version"),
         "dataset_id": dataset_manifest.get("dataset_id"),
     }
     out = PIPELINE_ROOT / "data/pipeline/release_pointer.json"

@@ -10,6 +10,16 @@ train:
   epochs: 1
   learning_rate: 0.0002
   dry_run: true
+  adapter_type: lora
+  max_seq_length: 2048
+  batch_size: 2
+  lora_r: 16
+  lora_alpha: 16
+  experiment: mlops-platform-continuous-training
+  unsloth:
+    container: unsloth
+    script: /workspace/scripts/finetune_lora.py
+    container_output_dir: /workspace/pipeline/models/artifacts/staging
 
 evaluate:
   min_accuracy: 0.0

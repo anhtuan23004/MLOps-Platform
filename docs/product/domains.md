@@ -31,17 +31,21 @@ training evidence from reproducible configs.
 
 Contracts:
 - `docs/product/data-versioning.md` (DVC)
-- `docs/product/experiment-tracking.md` (MLflow)
+- `docs/product/experiment-tracking.md` (MLflow + Model Registry)
 - `docs/product/continuous-training.md` (pipeline + triggers)
 - `docs/product/mlflow-genai.md` (tracing, eval, prompts — E03)
+- `docs/runbooks/continuous-training-gpu-vm.md` (GPU proof)
+
+Implemented (US-004):
+- Unsloth LoRA fine-tune via `training/unsloth/scripts/finetune_lora.py`
+- `mlflow.register_model` when `train.dry_run: false`
 
 Open decisions:
 
-- Wire Unsloth GPU trainer into `train` stage → [US-004](docs/stories/epics/E03-mlflow-genai/US-004-gpu-train-model-registry.md)
 - Automated promote after eval gates pass → [US-006](docs/stories/epics/E03-mlflow-genai/US-006-mlflow-genai-eval-gate.md)
 
 Next story slice:
-- [US-004](docs/stories/epics/E03-mlflow-genai/US-004-gpu-train-model-registry.md) — real fine-tune + `mlflow.register_model`
+- [US-005](docs/stories/epics/E03-mlflow-genai/US-005-mlflow-serving-traces.md) — MLflow serving traces
 
 ## Evaluation
 

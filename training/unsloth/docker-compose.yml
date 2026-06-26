@@ -14,8 +14,10 @@ services:
       - "${UNSLOTH_SSH_HOST_PORT:-2222}:22"
     volumes:
       - ./work:/workspace/work
+      - ./scripts:/workspace/scripts
       - ./configs:/workspace/configs
       - ../../models:/workspace/models
+      - ../../training/pipeline:/workspace/pipeline
     networks:
       - llm-net
 

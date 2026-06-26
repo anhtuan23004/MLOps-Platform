@@ -26,13 +26,21 @@ Environment:
 
 ## Model registry
 
-Training pipeline logs a run and registers a model version:
+Training pipeline logs a run and registers a model version when `train.dry_run` is
+false and Unsloth training succeeds:
 
-- **Experiment**: `mlops-platform-continuous-training`
-- **Registered model name**: from `config/pipeline/params.yaml` → `model.name`
+- **Experiment**: `mlops-platform-continuous-training` (override in params)
+- **Registered model name**: `config/pipeline/params.yaml` → `model.name`
+- **Staging alias**: MLflow alias `staging` → latest registered version from CT
 
-Release registry (`data/release-registry/`) references MLflow run ID and model URI
-in the `register` pipeline stage.
+`run_manifest.json` fields used downstream:
+
+| Field | Meaning |
+| --- | --- |
+| `mlflow.run_id` | Tracking run ID |
+| `mlflow.model_uri` | `models:/<name>/<version>` |
+| `mlflow.model_version` | Registry version integer |
+| `artifact_dir` | Local adapter staging path under pipeline |
 
 GenAI capabilities (tracing, eval, prompts): see [`mlflow-genai.md`](mlflow-genai.md)
 and epic E03 stories US-005–US-007.
