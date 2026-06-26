@@ -43,7 +43,8 @@ cp config/dvc/config.example training/pipeline/.dvc/config
 
 ## Prerequisites
 
-- S3 bucket (or MinIO) with credentials in environment
+- **Local dev**: MinIO + Postgres via `./llm-local train mlflow up` (see `experiment-tracking.md`)
+- **Production**: AWS S3 + external Postgres via release/CI-CD
 - GPU VM for real `train` stage (Unsloth container optional; pipeline supports `--dry-run` for CI)
 - MLflow server running
 - DVC remote configured

@@ -1,14 +1,17 @@
 services:
   mlflow:
-    image: ghcr.io/mlflow/mlflow:${MLFLOW_IMAGE_TAG:-v2.22.0}
-    container_name: mlflow
-    command: >
-      mlflow server
-      --host 0.0.0.0
-      --port 5000
-      --backend-store-uri file:///mlflow-data/mlruns
-      --artifacts-destination s3://${MLFLOW_S3_BUCKET}/mlflow-artifacts
-      --serve-artifacts
+    image: dhi.io/mlflow:3
+    command:
+      - server
+      - --host
+      - 0.0.0.0
+      - --port
+      - "5000"
+      - --backend-store-uri
+      - ${MLFLOW_BACKEND_STORE_URI:-file:///mlflow-data/mlruns}
+      - --artifacts-destination
+      - ${MLFLOW_ARTIFACT_ROOT}
+      - --serve-artifacts
     environment:
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
@@ -18,14 +21,9 @@ services:
       MLFLOW_S3_IGNORE_TLS: ${MLFLOW_S3_IGNORE_TLS:-false}
     ports:
       - "${MLFLOW_HOST_PORT:-15000}:5000"
-    volumes:
-      - mlflow_data:/mlflow-data
     networks:
       - llm-net
     restart: unless-stopped
-
-volumes:
-  mlflow_data:
 
 networks:
   llm-net:

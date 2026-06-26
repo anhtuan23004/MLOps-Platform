@@ -245,7 +245,7 @@ MLOps-Platform/
 | Gateway                | LiteLLM                            | API key auth, model routing           |
 | Training (interactive) | Unsloth container                  | Jupyter + GPU                         |
 | Training (automated)   | DVC pipeline + Python stages       | No Airflow/Prefect                    |
-| Experiment tracking    | MLflow 2.x                         | File or S3 artifact root              |
+| Experiment tracking    | MLflow 3.14.0 (DHI)                | Local: Postgres + MinIO; prod: S3 |
 | Data versioning        | DVC                                | S3-compatible remote                  |
 | Scheduling             | cron via `train pipeline schedule` | Optional daily trigger                |
 | Model download         | Hugging Face Hub                   | `llm_local.models.download`           |
@@ -385,5 +385,4 @@ Record new architectural choices in `docs/decisions/`.
 | `docs/decisions/002-mlflow-dvc-s3-continuous-training.md` | CT stack ADR            |
 | `docs/runbooks/release-promotion-vm.md`                   | GPU VM promotion proof  |
 | `docs/TEST_MATRIX.md`                                     | Validation proof matrix |
-
 

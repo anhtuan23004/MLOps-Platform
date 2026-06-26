@@ -14,7 +14,7 @@ convert = [
     "torch",
 ]
 training = [
-    "mlflow>=2.10.0",
+    "mlflow==3.14.0",
     "dvc[s3]>=3.0",
     "pyyaml>=6.0",
 ]

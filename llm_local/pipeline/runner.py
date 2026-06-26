@@ -5,8 +5,10 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 from llm_local.catalog import ROOT
+from llm_local.compose import compose_with_env
 from llm_local.config_paths import PIPELINE_DIR
 
 MLFLOW_DIR = ROOT / "training" / "mlflow"
@@ -40,21 +42,40 @@ def run_sequential(*, dry_run: bool = False) -> int:
 
 
 def dvc_available() -> bool:
+    dvc_cmd = dvc_command()
     try:
-        return subprocess.run(["dvc", "--version"], capture_output=True, check=False).returncode == 0
+        return subprocess.run(dvc_cmd + ["--version"], capture_output=True, check=False).returncode == 0
     except FileNotFoundError:
         return False
+
+
+def dvc_repo_available() -> bool:
+    return (PIPELINE_DIR / ".dvc").exists()
+
+
+def dvc_command() -> list[str]:
+    candidates = [
+        ROOT / ".venv" / "bin" / "dvc",
+        Path(sys.executable).resolve().parent / "dvc",
+    ]
+    for candidate in candidates:
+        if candidate.is_file() and os.access(candidate, os.X_OK):
+            return [str(candidate)]
+    return ["dvc"]
 
 
 def dvc_repro(*, dry_run: bool = False) -> int:
     if not dvc_available():
         print("[!] dvc not installed; running sequential module fallback")
         return run_sequential(dry_run=dry_run)
+    if not dvc_repo_available():
+        print("[!] training/pipeline is not initialized as a DVC repo; running sequential module fallback")
+        return run_sequential(dry_run=dry_run)
 
     env = os.environ.copy()
     if dry_run:
         env["CT_DRY_RUN"] = "true"
-    return subprocess.run(["dvc", "repro"], cwd=PIPELINE_DIR, env=env, check=False).returncode
+    return subprocess.run(dvc_command() + ["repro"], cwd=PIPELINE_DIR, env=env, check=False).returncode
 
 
 def ensure_network_catalog() -> None:
@@ -69,15 +90,11 @@ def ensure_network_catalog() -> None:
 
 
 def mlflow_up() -> int:
-    from .compose import compose_with_env
-
     ensure_network_catalog()
     return subprocess.run(compose_with_env("mlflow", "up", "-d"), cwd=MLFLOW_DIR, check=False).returncode
 
 
 def mlflow_down() -> int:
-    from .compose import compose_with_env
-
     return subprocess.run(compose_with_env("mlflow", "down"), cwd=MLFLOW_DIR, check=False).returncode
 
 

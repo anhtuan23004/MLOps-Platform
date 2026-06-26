@@ -7,7 +7,8 @@ training. It is the source of truth for which data version produced which model.
 
 ## Remote storage
 
-Production direction: **S3-compatible remote** (AWS S3 or MinIO).
+Production direction: **S3-compatible remote** (AWS S3 in production; **MinIO** in
+local dev via the MLflow compose stack — same bucket, different prefix).
 
 Configure from `config/dvc/config.example` (copy to `training/pipeline/.dvc/config`):
 

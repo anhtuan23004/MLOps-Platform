@@ -6,7 +6,10 @@ Runbook for **US-004**: real Unsloth fine-tune with MLflow Model Registry.
 
 - GPU VM with NVIDIA drivers + Docker
 - `llm-net` network: `make network`
-- S3 credentials in environment (`AWS_*`, `MLFLOW_S3_BUCKET`)
+- **Local dev**: `./llm-local train mlflow up` brings up Postgres + MinIO + MLflow
+  (see `config/env/mlflow.env.example`). Set DVC remote to the same bucket:
+  `s3://mlops-platform/dvc-storage` with `AWS_ENDPOINT_URL=http://localhost:19000`.
+- **Production**: S3 + external Postgres via release/CI-CD (`AWS_*`, no MinIO endpoint).
 - DVC remote: `cp config/dvc/config.example training/pipeline/.dvc/config` (edit bucket)
 - Base model present under `models/<id>/` (e.g. `./llm-local model download ...`)
 
@@ -15,7 +18,8 @@ Runbook for **US-004**: real Unsloth fine-tune with MLflow Model Registry.
 ```bash
 # 1. Config
 ./llm-local config init
-vim config/env/mlflow.env      # S3 + tracking URI
+./llm-local config init
+vim config/env/mlflow.env      # defaults: local MinIO + Postgres; prod: external S3
 vim config/pipeline/params.yaml  # set train.dry_run: false
 
 # 2. Start services

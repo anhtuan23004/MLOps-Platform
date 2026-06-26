@@ -40,6 +40,7 @@ training/pipeline/models/
 training/pipeline/evaluation/
 training/pipeline/data/pipeline/
 training/pipeline/logs/
+training/mlflow/data/
 .dvc/cache/
 .dvc/tmp/
 evaluation/results/

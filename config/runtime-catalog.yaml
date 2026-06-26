@@ -97,9 +97,8 @@ services:
     compose_file: training/mlflow/docker-compose.yml
     container: mlflow
     image:
-      repository: ghcr.io/mlflow/mlflow
-      tag_env: MLFLOW_IMAGE_TAG
-      default_tag: v2.22.0
+      repository: dhi.io/mlflow
+      default_tag: "3"
     host_port:
       env: MLFLOW_HOST_PORT
       default: 15000
