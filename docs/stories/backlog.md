@@ -24,7 +24,7 @@ See [`epics/E03-mlflow-genai/README.md`](epics/E03-mlflow-genai/README.md).
 
 | Story | Title | Status |
 | --- | --- | --- |
-| [US-004](epics/E03-mlflow-genai/US-004-gpu-train-model-registry.md) | Real GPU train + MLflow Model Registry | planned |
+| [US-004](epics/E03-mlflow-genai/US-004-gpu-train-model-registry.md) | Real GPU train + MLflow Model Registry | in_progress |
 | [US-005](epics/E03-mlflow-genai/US-005-mlflow-serving-traces.md) | MLflow Tracing on serving path | planned |
 | [US-006](epics/E03-mlflow-genai/US-006-mlflow-genai-eval-gate.md) | MLflow GenAI Evaluation gate | planned |
 | [US-007](epics/E03-mlflow-genai/US-007-mlflow-prompt-registry.md) | MLflow Prompt Registry | planned |

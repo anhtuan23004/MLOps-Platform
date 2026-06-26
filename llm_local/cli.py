@@ -70,6 +70,12 @@ def ensure_network() -> None:
 def compose(service_id: str, action: str) -> int:
     if action == "up":
         ensure_network()
+        if service_id == "litellm":
+            from llm_local.serving.tracing import prepare_litellm_serving
+
+            enabled = prepare_litellm_serving()
+            if enabled:
+                print("[*] MLflow tracing enabled for LiteLLM (see config/mlflow-genai.yaml)")
         run([PYTHON, "-m", "llm_local.ops.preflight", service_id])
         run(compose_with_env(service_id, "up", "-d"), cwd=service_dir(service_id))
         return 0
@@ -150,8 +156,10 @@ def config(args: list[str]) -> int:
     sub = args[0]
     if sub == "init":
         from llm_local.config_paths import init_local_env_files
+        from llm_local.serving.tracing import prepare_litellm_serving
 
         created = init_local_env_files()
+        prepare_litellm_serving()
         if not created:
             print("[*] All config/env/*.env files already exist")
             return 0

@@ -72,7 +72,17 @@ PRESETS_FILE = config_path("presets")
 PIPELINE_PARAMS_FILE = config_path("pipeline_params")
 DVC_CONFIG_EXAMPLE = config_path("dvc_config_example")
 LITELLM_CONFIG_FILE = config_path("litellm_config")
+LITELLM_TRACING_CONFIG_FILE = config_path("litellm_config_tracing")
+MLFLOW_GENAI_FILE = config_path("mlflow_genai")
 ACTIVE_SERVING_STATE = config_path("active_serving_state")
+ACTIVE_LITELLM_CONFIG = config_path("active_litellm_config")
+
+
+@lru_cache(maxsize=1)
+def load_mlflow_genai() -> dict[str, Any]:
+    with MLFLOW_GENAI_FILE.open() as handle:
+        return _yaml.load(handle) or {}
+
 
 # Model weights stay under models/
 MODELS_DATA_DIR = ROOT / "models"

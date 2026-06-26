@@ -55,6 +55,9 @@ class ValidationRunner:
 
 
 def run_quick(include_runtime: bool = False) -> int:
+    from llm_local.serving.tracing import prepare_litellm_serving
+
+    prepare_litellm_serving()
     runner = ValidationRunner()
     check_catalog(runner)
     check_compose(runner)
@@ -72,6 +75,9 @@ def run_quick(include_runtime: bool = False) -> int:
 
 
 def run_integration() -> int:
+    from llm_local.serving.tracing import prepare_litellm_serving
+
+    prepare_litellm_serving()
     runner = ValidationRunner()
     check_catalog(runner)
     check_compose(runner)
@@ -88,9 +94,11 @@ def check_training_pipeline(runner: ValidationRunner) -> None:
     runner.check("pipeline params.yaml exists", ["test", "-f", "config/pipeline/params.yaml"])
     runner.check("mlflow compose exists", ["test", "-f", "training/mlflow/docker-compose.yml"])
     runner.check("pipeline runner syntax", [sys.executable, "-m", "py_compile", "llm_local/pipeline/runner.py"])
+    runner.check("mlflow-genai.yaml exists", ["test", "-f", "config/mlflow-genai.yaml"])
+    runner.check("tracing module syntax", [sys.executable, "-m", "py_compile", "llm_local/serving/tracing.py"])
     runner.check(
         "training pipeline unit tests",
-        [sys.executable, "-m", "pytest", "tests/test_training_pipeline.py", "-q"],
+        [sys.executable, "-m", "pytest", "tests/test_training_pipeline.py", "tests/test_us004_train.py", "tests/test_us005_tracing.py", "-q"],
     )
 
 
@@ -201,7 +209,7 @@ def check_scripts(runner: ValidationRunner) -> None:
             "-c",
             f"{sys.executable} -m py_compile llm_local/*.py llm_local/models/*.py "
             f"llm_local/releases/*.py llm_local/pipeline/*.py llm_local/pipeline/stages/*.py "
-            f"llm_local/ops/*.py llm_local/config_paths.py",
+            f"llm_local/serving/*.py llm_local/ops/*.py llm_local/config_paths.py",
         ],
     )
     runner.check("llm-local shim syntax", ["bash", "-n", "llm-local"])

@@ -12,8 +12,11 @@ paths:
   pipeline_params: config/pipeline/params.yaml
   dvc_config_example: config/dvc/config.example
   litellm_config: config/litellm/config.yaml
+  litellm_config_tracing: config/litellm/config.tracing.yaml
+  mlflow_genai: config/mlflow-genai.yaml
   release_registry_default: data/release-registry
   active_serving_state: config/active/serving.yaml
+  active_litellm_config: config/active/litellm-config.yaml
 
 # env_profile keys referenced by config/runtime-catalog.yaml → services.*.env_profile
 env:

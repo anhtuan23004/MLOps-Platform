@@ -2,7 +2,7 @@
 
 ## Status
 
-planned
+in_progress
 
 ## Lane
 
@@ -53,17 +53,6 @@ latency in the MLflow UI alongside Prometheus dashboards.
 
 ## Evidence
 
-<!-- evidence-metadata
-validated_at:
-host_type: gpu-runtime
-gpu:
-commands:
-- ./llm-local serve vllm up
-- ./llm-local serve litellm up
-- curl LiteLLM chat completion
-stale_when:
-- LiteLLM image tag changes
-- mlflow-genai.yaml tracing config changes
--->
+Unit + integration: `tests/test_us005_tracing.py`, `./llm-local validate integration` (tracing off).
 
-Pending platform proof.
+Pending platform proof (trace visible in MLflow UI after chat request).

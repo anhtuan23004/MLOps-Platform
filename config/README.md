@@ -16,6 +16,8 @@ assets only.
 | `pipeline/params.yaml` | Continuous training parameters (DVC-tracked) |
 | `dvc/config.example` | S3 remote template for DVC |
 | `litellm/config.yaml` | LiteLLM gateway routing config |
+| `litellm/config.tracing.yaml` | LiteLLM + MLflow callback (US-005) |
+| `mlflow-genai.yaml` | Tracing / eval / prompt registry settings |
 | `env/*.env.example` | Per-service environment templates |
 | `env/*.env` | Local overrides (gitignored; copy from `.example`) |
 | `active/serving.yaml` | Generated active preset state (gitignored) |

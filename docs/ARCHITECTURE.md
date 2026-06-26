@@ -6,7 +6,7 @@ versus planned. Product behavior contracts live in `docs/product/`; this file
 describes system shape and boundaries.
 
 Last aligned with: US-001 (lifecycle), US-002 (release registry), US-003
-(MLflow + DVC continuous training).
+(MLflow + DVC continuous training), US-004 (GPU train + Model Registry).
 
 ## Design goals
 
@@ -17,8 +17,8 @@ Last aligned with: US-001 (lifecycle), US-002 (release registry), US-003
    handoffs.
 3. **Harness-driven change** — behavior enters through stories and validation
   ladders; inherited scaffold is not production proof by default.
-4. **Single control plane** — `./llm-local` (Python package `llm_local`) is
-  the operator interface; Docker Compose runs workloads.
+4. **Single control plane** — `llm_local` holds behavior; `./llm-local` is the
+   thin operator CLI; Docker Compose runs workloads.
 
 ## System context
 
@@ -75,7 +75,7 @@ flowchart TB
 | **Artifact**    | Checkpoints, eval reports, release records         | `training/pipeline/models/`, `evaluation/`, `data/release-registry/` |
 | **Workload**    | Training, conversion, benchmark jobs               | `training/`, `evaluation/` (Docker Compose)                          |
 | **Serving**     | Inference runtime and gateway                      | `serving/vllm/`, `serving/litellm/`                                  |
-| **Observation** | Metrics, dashboards, batch reports                 | `observation/`                                                       |
+| **Observation** | Metrics, dashboards, batch reports, MLflow traces (US-005) | `observation/`, MLflow UI via `training/mlflow/` |
 
 
 ### Control plane (`llm_local/`)
@@ -97,6 +97,8 @@ llm_local/
       evaluate.py
       register.py
   releases/              # Promotion registry: schema, store, CLI, serving apply
+  serving/
+    tracing.py           # MLflow tracing config for LiteLLM (US-005)
   ops/
     preflight.py         # GPU, ports, health, model/runtime compatibility
     validate_evidence.py # Story evidence block validation
@@ -104,6 +106,32 @@ llm_local/
 
 **Rule:** commands that mutate runtime state read `config/platform.yaml` and
 `config/runtime-catalog.yaml`, then write `config/env/*.env` or restart containers.
+
+### API boundaries
+
+The repo exposes **one operator CLI** with many subcommands — not multiple
+independent CLIs. Stability and reuse come from the Python package layer.
+
+| Surface | Role | Stable contract? | Examples |
+| --- | --- | --- | --- |
+| **Operator CLI** | Human + runbook entry point | UX may change (rename/group commands) | `./llm-local release promote …` |
+| **Programmatic API** | Business logic, tests, imports | Yes — prefer keeping modules stable | `llm_local.releases.store.ReleaseStore` |
+| **Pipeline automation** | DVC/cron; bypasses CLI router | Stage module interfaces | `python -m llm_local.pipeline.stages.train` |
+| **Makefile** | Shortcuts over the operator CLI | Optional; docs may reference either | `make validate-quick` |
+
+```text
+Operator / Makefile ──► ./llm-local (cli.py)     thin adapter — safe to reshape
+Cron / DVC          ──► python -m llm_local…     automation — avoid shelling to llm-local
+Tests / tools       ──► import llm_local.*       programmatic API — keep stable
+```
+
+**If a subcommand is removed later**, update docs, Makefile, and tests that
+reference the command string. Core behavior remains as long as the underlying
+`llm_local/` module is kept. Do not put business logic only in `cli.py`.
+
+**When to add a subcommand:** repeated operator workflow with clear domain
+(`release`, `train pipeline`, `serve`). **When not to:** one-off scripts,
+pipeline internals, or config that belongs in `config/` only.
 
 ### Configuration plane (`config/`)
 

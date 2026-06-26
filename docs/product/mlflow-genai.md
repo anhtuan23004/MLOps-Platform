@@ -9,8 +9,7 @@ with the existing hybrid stack (DVC, release registry, vLLM, LiteLLM).
    `data/release-registry/` (promotion).
 2. **Classic MLflow** (runs, metrics, model registry) owns the training artifact
    line; **GenAI features** own trace, eval, and prompt lineage.
-3. **Config** for MLflow GenAI lives under `config/` (see `config/pipeline/params.yaml`
-   and future `config/mlflow-genai.yaml` when US-005+ land).
+3. **Config** for MLflow GenAI lives under `config/mlflow-genai.yaml`.
 
 ## Capability map
 
@@ -23,11 +22,23 @@ with the existing hybrid stack (DVC, release registry, vLLM, LiteLLM).
 
 ## Tracing (US-005)
 
-- Traces sent to the same `MLFLOW_TRACKING_URI` as training.
-- Separate experiment recommended: `mlops-platform-serving-traces`.
-- LiteLLM remains the gateway; tracing hooks at the gateway or client SDK layer.
-- Prometheus metrics in `observation/` remain the SLO source; traces are for
-  deep debugging.
+Enable in `config/mlflow-genai.yaml`:
+
+```yaml
+genai:
+  tracing_enabled: true
+```
+
+Then:
+
+```bash
+./llm-local train mlflow up    # tracking server on llm-net
+./llm-local serve litellm up   # renders config/active/litellm-config.yaml + env
+```
+
+- Traces go to experiment `mlops-platform-serving-traces` (configurable).
+- LiteLLM uses `success_callback: [mlflow]` when tracing is on.
+- Prometheus metrics in `observation/` remain the SLO source.
 
 ## Evaluation (US-006)
 

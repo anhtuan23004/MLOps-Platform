@@ -1,0 +1,18 @@
+# MLflow GenAI settings — MLOps-Platform (US-005+)
+# Toggle tracing without code changes.
+
+version: 1
+
+mlflow:
+  # Host shell / pipeline clients
+  tracking_uri_host: http://localhost:15000
+  # LiteLLM container on llm-net
+  tracking_uri_docker: http://mlflow:5000
+  experiments:
+    continuous_training: mlops-platform-continuous-training
+    serving_traces: mlops-platform-serving-traces
+    evaluation: mlops-platform-eval
+
+genai:
+  tracing_enabled: false
+  litellm_success_callback: mlflow
