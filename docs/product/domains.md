@@ -33,14 +33,15 @@ Contracts:
 - `docs/product/data-versioning.md` (DVC)
 - `docs/product/experiment-tracking.md` (MLflow)
 - `docs/product/continuous-training.md` (pipeline + triggers)
+- `docs/product/mlflow-genai.md` (tracing, eval, prompts — E03)
 
 Open decisions:
 
-- Wire Unsloth GPU trainer into `train` stage (currently dry-run capable stub).
-- Automated promote after eval gates pass.
+- Wire Unsloth GPU trainer into `train` stage → [US-004](docs/stories/epics/E03-mlflow-genai/US-004-gpu-train-model-registry.md)
+- Automated promote after eval gates pass → [US-006](docs/stories/epics/E03-mlflow-genai/US-006-mlflow-genai-eval-gate.md)
 
 Next story slice:
-- Real fine-tune in `llm_local/pipeline/stages/train.py` calling Unsloth container.
+- [US-004](docs/stories/epics/E03-mlflow-genai/US-004-gpu-train-model-registry.md) — real fine-tune + `mlflow.register_model`
 
 ## Evaluation
 
@@ -49,12 +50,12 @@ adherence, and runtime compatibility before promotion.
 
 Open decisions:
 
-- Default quality gates.
+- Default quality gates → [US-006](../stories/epics/E03-mlflow-genai/US-006-mlflow-genai-eval-gate.md)
 - Per-domain metric thresholds.
 - Required evidence artifacts.
 
 Next story slice:
-- Define the default evaluation bundle and how it attaches to a release record.
+- [US-006](../stories/epics/E03-mlflow-genai/US-006-mlflow-genai-eval-gate.md) — MLflow GenAI eval gate in `evaluate` stage
 
 ## Serving And Gateway
 
@@ -80,6 +81,7 @@ Open decisions:
 - Required dashboards and alerts.
 - Incident runbooks.
 - Evidence freshness and release-check cadence.
+- MLflow serving traces vs Prometheus SLOs → [US-005](../stories/epics/E03-mlflow-genai/US-005-mlflow-serving-traces.md)
 
 Next story slice:
-- Define the minimum monitoring signals and rollback triggers needed to call a release “promoted”.
+- [US-005](../stories/epics/E03-mlflow-genai/US-005-mlflow-serving-traces.md) — MLflow Tracing on LiteLLM path

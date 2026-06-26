@@ -34,6 +34,9 @@ Training pipeline logs a run and registers a model version:
 Release registry (`data/release-registry/`) references MLflow run ID and model URI
 in the `register` pipeline stage.
 
+GenAI capabilities (tracing, eval, prompts): see [`mlflow-genai.md`](mlflow-genai.md)
+and epic E03 stories US-005–US-007.
+
 ## UI
 
 After `./llm-local train mlflow up`, open `http://localhost:15000`.
