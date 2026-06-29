@@ -4,7 +4,7 @@ dataset:
 
 model:
   name: mlops-ct-model
-  base_model: local/sample-chat-small
+  base_model: local/TinyLlama-1.1B-Chat-v1.0
 
 train:
   epochs: 1

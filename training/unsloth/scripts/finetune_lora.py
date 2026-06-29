@@ -46,11 +46,11 @@ def simulate(config: dict, output_dir: Path) -> float:
 
 
 def train_with_unsloth(config: dict, output_dir: Path) -> float:
+    from unsloth import FastLanguageModel
     import torch
     from datasets import Dataset
     from transformers import TrainingArguments
     from trl import SFTTrainer
-    from unsloth import FastLanguageModel
 
     model_path = config["base_model_path"]
     max_seq_length = int(config.get("max_seq_length", 2048))
@@ -93,7 +93,7 @@ def train_with_unsloth(config: dict, output_dir: Path) -> float:
     max_steps = max(10, epochs * 10)
     trainer = SFTTrainer(
         model=model,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         train_dataset=dataset,
         dataset_text_field="text",
         max_seq_length=max_seq_length,

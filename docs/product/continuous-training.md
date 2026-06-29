@@ -76,4 +76,4 @@ See [`docs/runbooks/release-promotion-vm.md`](../runbooks/release-promotion-vm.m
 | MLflow server compose | implemented (US-003) |
 | S3 remote config template | implemented (US-003) |
 | Scheduler hook | implemented (US-003) |
-| Unsloth GPU training integration | stub/dry-run; wire real trainer in follow-up story |
+| Unsloth GPU training integration | implemented (US-004) |

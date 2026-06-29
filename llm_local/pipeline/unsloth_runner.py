@@ -14,6 +14,7 @@ PIPELINE_ROOT = ROOT / "training" / "pipeline"
 UNSLOTH_WORK = ROOT / "training" / "unsloth" / "work"
 DEFAULT_CONTAINER = "unsloth"
 DEFAULT_SCRIPT = "/workspace/scripts/finetune_lora.py"
+CONTAINER_CONFIG_PATH = "/workspace/work/ct_train_config.json"
 
 
 def container_running(name: str) -> bool:
@@ -72,6 +73,10 @@ def run_unsloth_training(
 
     staging = output_dir or (PIPELINE_ROOT / "models" / "artifacts" / "staging")
     staging.mkdir(parents=True, exist_ok=True)
+    try:
+        staging.chmod(0o777)
+    except OSError:
+        pass
 
     if os.environ.get("UNSLOTH_TRAIN_SIMULATE", "").lower() in {"1", "true", "yes"}:
         return _simulate_training(staging, params, manifest)
@@ -85,16 +90,19 @@ def run_unsloth_training(
     UNSLOTH_WORK.mkdir(parents=True, exist_ok=True)
     config = build_train_config(params, manifest, staging)
     config_path = UNSLOTH_WORK / "ct_train_config.json"
-    config_path.write_text(json.dumps(config, indent=2) + "\n")
+    payload = json.dumps(config, indent=2) + "\n"
+    try:
+        config_path.write_text(payload)
+    except PermissionError:
+        _write_container_config(container, payload)
 
-    container_config = f"/workspace/work/ct_train_config.json"
     exec_cmd = [
         "docker",
         "exec",
         container,
         "python",
         script,
-        container_config,
+        CONTAINER_CONFIG_PATH,
     ]
     print(f"[*] Running Unsloth fine-tune in {container}: {' '.join(exec_cmd[2:])}")
     result = subprocess.run(exec_cmd, check=False, text=True, capture_output=True)
@@ -153,3 +161,21 @@ def sync_staging_artifacts(staging: Path) -> None:
     """Ensure staging directory exists after container wrote to mounted pipeline path."""
     if not staging.is_dir():
         raise RuntimeError(f"Expected artifact staging directory missing: {staging}")
+
+
+def _write_container_config(container: str, payload: str) -> None:
+    result = subprocess.run(
+        ["docker", "exec", "-i", "-u", "0", container, "python", "-c", (
+            "from pathlib import Path; import sys; "
+            f"Path('{CONTAINER_CONFIG_PATH}').write_text(sys.stdin.read())"
+        )],
+        input=payload,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(
+            "Failed to write training config inside container: "
+            f"{result.stderr.strip() or result.stdout.strip() or result.returncode}"
+        )

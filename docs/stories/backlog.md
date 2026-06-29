@@ -18,14 +18,31 @@ Create story packets when work is selected, not before.
 - [`US-003`](epics/E02-continuous-training/US-003-mlflow-dvc-pipeline.md) — MLflow + DVC continuous training (in progress)
 - [`US-002`](epics/E01-model-release-lifecycle/US-002-release-registry-cli.md) — Release registry CLI + serving promotion (in progress)
 
+## Epic E01 — Model release lifecycle (in progress)
+
+See [`epics/E01-model-release-lifecycle/README.md`](epics/E01-model-release-lifecycle/README.md).
+
+| Story | Title | Status |
+| --- | --- | --- |
+| [US-001](epics/E01-model-release-lifecycle/US-001-define-promotion-lifecycle.md) | Define promotion lifecycle | planned |
+| [US-002](epics/E01-model-release-lifecycle/US-002-release-registry-cli.md) | Release registry CLI + real serving promotion | in_progress |
+
+## Epic E02 — Continuous training (in progress)
+
+See [`epics/E02-continuous-training/README.md`](epics/E02-continuous-training/README.md).
+
+| Story | Title | Status |
+| --- | --- | --- |
+| [US-003](epics/E02-continuous-training/US-003-mlflow-dvc-pipeline.md) | MLflow + DVC continuous training pipeline | in_progress |
+
 ## Epic E03 — MLflow GenAI (planned)
 
 See [`epics/E03-mlflow-genai/README.md`](epics/E03-mlflow-genai/README.md).
 
 | Story | Title | Status |
 | --- | --- | --- |
-| [US-004](epics/E03-mlflow-genai/US-004-gpu-train-model-registry.md) | Real GPU train + MLflow Model Registry | in_progress |
-| [US-005](epics/E03-mlflow-genai/US-005-mlflow-serving-traces.md) | MLflow Tracing on serving path | planned |
+| [US-004](epics/E03-mlflow-genai/US-004-gpu-train-model-registry.md) | Real GPU train + MLflow Model Registry | implemented |
+| [US-005](epics/E03-mlflow-genai/US-005-mlflow-serving-traces.md) | MLflow Tracing on serving path | in_progress |
 | [US-006](epics/E03-mlflow-genai/US-006-mlflow-genai-eval-gate.md) | MLflow GenAI Evaluation gate | planned |
 | [US-007](epics/E03-mlflow-genai/US-007-mlflow-prompt-registry.md) | MLflow Prompt Registry | planned |
 

@@ -356,7 +356,7 @@ Groups: `serving`, `training`, `evaluation`, `observation`.
 | DVC pipeline (4 stages)                 | implemented                    | US-003    |
 | MLflow server compose                   | implemented                    | US-003    |
 | Cron scheduler hook                     | implemented                    | US-003    |
-| Real Unsloth fine-tune in `train` stage | stub / dry-run                 | follow-up |
+| Real Unsloth fine-tune in `train` stage | implemented                    | US-004    |
 | Auto-promote after eval gates           | not implemented                | backlog   |
 | Monitoring → retrain trigger            | not implemented                | backlog   |
 | Airflow / workflow orchestrator         | not planned (current phase)    | —         |
@@ -385,4 +385,3 @@ Record new architectural choices in `docs/decisions/`.
 | `docs/decisions/002-mlflow-dvc-s3-continuous-training.md` | CT stack ADR            |
 | `docs/runbooks/release-promotion-vm.md`                   | GPU VM promotion proof  |
 | `docs/TEST_MATRIX.md`                                     | Validation proof matrix |
-
