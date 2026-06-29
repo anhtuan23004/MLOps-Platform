@@ -10,7 +10,9 @@ training. It is the source of truth for which data version produced which model.
 Production direction: **S3-compatible remote** (AWS S3 in production; **MinIO** in
 local dev via the MLflow compose stack — same bucket, different prefix).
 
-Configure from `config/dvc/config.example` (copy to `training/pipeline/.dvc/config`):
+The pipeline runner creates `training/pipeline/.dvc/config` from
+`config/dvc/config.example` when the file is missing in a fresh environment.
+After the first run, edit the copied file for the target bucket:
 
 ```ini
 [core]

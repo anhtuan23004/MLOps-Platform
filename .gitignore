@@ -40,6 +40,8 @@ training/pipeline/models/
 training/pipeline/evaluation/
 training/pipeline/data/pipeline/
 training/pipeline/logs/
+training/pipeline/.dvc/config
+training/pipeline/.state/
 training/mlflow/data/
 .dvc/cache/
 .dvc/tmp/

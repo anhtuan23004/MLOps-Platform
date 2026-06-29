@@ -1,0 +1,115 @@
+schema: '2.0'
+stages:
+  prepare_data:
+    cmd: ./run_stage.sh prepare_data
+    deps:
+    - path: ../../config/pipeline/params.yaml
+      hash: md5
+      md5: d6e4491d9074f1ece1f1af32563fa94d
+      size: 541
+    - path: ../../llm_local/pipeline/stages/common.py
+      hash: md5
+      md5: 38e77ff8b68c14110836ad71d1a78917
+      size: 1883
+    - path: ../../llm_local/pipeline/stages/prepare_data.py
+      hash: md5
+      md5: dac33fd62ca6980ce7c47e1345cba1c1
+      size: 1300
+    params:
+      ../../config/pipeline/params.yaml:
+        dataset.source: data/raw
+        dataset.version_tag: v1
+    outs:
+    - path: data/processed/dataset_manifest.json
+      hash: md5
+      md5: c91def2bc116d298e48a6a59afe92592
+      size: 676
+  train:
+    cmd: ./run_stage.sh train
+    deps:
+    - path: ../../config/pipeline/params.yaml
+      hash: md5
+      md5: d6e4491d9074f1ece1f1af32563fa94d
+      size: 541
+    - path: ../../llm_local/pipeline/stages/common.py
+      hash: md5
+      md5: 38e77ff8b68c14110836ad71d1a78917
+      size: 1883
+    - path: ../../llm_local/pipeline/stages/train.py
+      hash: md5
+      md5: 0ff3e8266952a01dda86f0c7a3e2e991
+      size: 2148
+    - path: data/processed/dataset_manifest.json
+      hash: md5
+      md5: c91def2bc116d298e48a6a59afe92592
+      size: 676
+    params:
+      ../../config/pipeline/params.yaml:
+        model.base_model: local/TinyLlama-1.1B-Chat-v1.0
+        model.name: mlops-ct-model
+        train.dry_run: true
+        train.epochs: 1
+        train.learning_rate: 0.0002
+    outs:
+    - path: models/artifacts/run_manifest.json
+      hash: md5
+      md5: 36fa17c1a54097f8c22ae43a83eb061c
+      size: 623
+  evaluate:
+    cmd: ./run_stage.sh evaluate
+    deps:
+    - path: ../../config/pipeline/params.yaml
+      hash: md5
+      md5: d6e4491d9074f1ece1f1af32563fa94d
+      size: 541
+    - path: ../../llm_local/pipeline/stages/common.py
+      hash: md5
+      md5: 38e77ff8b68c14110836ad71d1a78917
+      size: 1883
+    - path: ../../llm_local/pipeline/stages/evaluate.py
+      hash: md5
+      md5: 470b6c5c05332c01ef1da4a3f6e8bbc8
+      size: 1096
+    - path: models/artifacts/run_manifest.json
+      hash: md5
+      md5: 36fa17c1a54097f8c22ae43a83eb061c
+      size: 623
+    params:
+      ../../config/pipeline/params.yaml:
+        evaluate.min_accuracy: 0.0
+    outs:
+    - path: evaluation/results/ct_eval_report.json
+      hash: md5
+      md5: ff146af65c1f243af0e570dcf6662ea2
+      size: 200
+  register:
+    cmd: ./run_stage.sh register
+    deps:
+    - path: ../../config/pipeline/params.yaml
+      hash: md5
+      md5: d6e4491d9074f1ece1f1af32563fa94d
+      size: 541
+    - path: ../../llm_local/pipeline/stages/common.py
+      hash: md5
+      md5: 38e77ff8b68c14110836ad71d1a78917
+      size: 1883
+    - path: ../../llm_local/pipeline/stages/register.py
+      hash: md5
+      md5: 36124aad98ab74e2523dfe92933cccef
+      size: 2118
+    - path: evaluation/results/ct_eval_report.json
+      hash: md5
+      md5: ff146af65c1f243af0e570dcf6662ea2
+      size: 200
+    - path: models/artifacts/run_manifest.json
+      hash: md5
+      md5: 36fa17c1a54097f8c22ae43a83eb061c
+      size: 623
+    params:
+      ../../config/pipeline/params.yaml:
+        register.release_prefix: rel-ct
+    outs:
+    - path: data/pipeline/release_pointer.json
+      hash: md5
+      md5: f90d8d148486f957fae283fa7e870812
+      size: 218

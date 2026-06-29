@@ -27,9 +27,8 @@ flowchart LR
 # Start MLflow tracking server (S3 artifacts)
 ./llm-local train mlflow up
 
-# Initialize DVC remote (first time on host)
-cp config/dvc/config.example training/pipeline/.dvc/config
-# edit bucket URL, set AWS_* env vars
+# First run auto-initializes training/pipeline/.dvc/config from config/dvc/config.example.
+# Edit the copied bucket URL for the target env, then set AWS_* env vars.
 
 # Run full continuous training pipeline
 ./llm-local train pipeline run
@@ -47,7 +46,9 @@ cp config/dvc/config.example training/pipeline/.dvc/config
 - **Production**: AWS S3 + external Postgres via release/CI-CD
 - GPU VM for real `train` stage (Unsloth container optional; pipeline supports `--dry-run` for CI)
 - MLflow server running
-- DVC remote configured
+- DVC remote configured from `config/dvc/config.example` after first-run bootstrap
+- Writable release registry root. Default is `data/release-registry/`; set
+  `RELEASE_REGISTRY_ROOT` when the default path is not writable in a migrated env.
 
 ## Promotion handoff
 

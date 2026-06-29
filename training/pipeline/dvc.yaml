@@ -3,47 +3,50 @@ vars:
 
 stages:
   prepare_data:
-    cmd: python -m llm_local.pipeline.stages.prepare_data
+    cmd: ./run_stage.sh prepare_data
     deps:
       - ../../llm_local/pipeline/stages/prepare_data.py
       - ../../llm_local/pipeline/stages/common.py
       - ../../config/pipeline/params.yaml
     params:
-      - dataset.source
-      - dataset.version_tag
+      - ../../config/pipeline/params.yaml:
+          - dataset.source
+          - dataset.version_tag
     outs:
       - data/processed/dataset_manifest.json
 
   train:
-    cmd: python -m llm_local.pipeline.stages.train
+    cmd: ./run_stage.sh train
     deps:
       - ../../llm_local/pipeline/stages/train.py
       - ../../llm_local/pipeline/stages/common.py
       - data/processed/dataset_manifest.json
       - ../../config/pipeline/params.yaml
     params:
-      - model.name
-      - model.base_model
-      - train.epochs
-      - train.learning_rate
-      - train.dry_run
+      - ../../config/pipeline/params.yaml:
+          - model.name
+          - model.base_model
+          - train.epochs
+          - train.learning_rate
+          - train.dry_run
     outs:
       - models/artifacts/run_manifest.json
 
   evaluate:
-    cmd: python -m llm_local.pipeline.stages.evaluate
+    cmd: ./run_stage.sh evaluate
     deps:
       - ../../llm_local/pipeline/stages/evaluate.py
       - ../../llm_local/pipeline/stages/common.py
       - models/artifacts/run_manifest.json
       - ../../config/pipeline/params.yaml
     params:
-      - evaluate.min_accuracy
+      - ../../config/pipeline/params.yaml:
+          - evaluate.min_accuracy
     outs:
       - evaluation/results/ct_eval_report.json
 
   register:
-    cmd: python -m llm_local.pipeline.stages.register
+    cmd: ./run_stage.sh register
     deps:
       - ../../llm_local/pipeline/stages/register.py
       - ../../llm_local/pipeline/stages/common.py
@@ -51,6 +54,7 @@ stages:
       - models/artifacts/run_manifest.json
       - ../../config/pipeline/params.yaml
     params:
-      - register.release_prefix
+      - ../../config/pipeline/params.yaml:
+          - register.release_prefix
     outs:
       - data/pipeline/release_pointer.json
