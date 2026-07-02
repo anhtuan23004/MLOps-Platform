@@ -60,9 +60,13 @@ detected medical entity.
 ### Model output boundary
 
 The fine-tuned LLM emits an intermediate JSON array where each entity contains
-exactly `text`, `type`, and `assertions`. The system prompt includes the closed
-JSON Schema used by the training sample. The model must copy `text` verbatim
-and preserve entity order.
+exactly `text`, `type`, and `assertions`. Semantic field rules live in the
+English system prompt (`config/prompts/medical-concept-extraction.system.txt`);
+Vietnamese entity labels are kept verbatim. A compact JSON Schema
+(`config/prompts/medical-concept-extraction.schema.json`) defines structure
+only. `llm_local.pipeline.medical_prompt.build_medical_extraction_system_prompt()`
+assembles the prompt for training samples and inference. The model must copy
+`text` verbatim and preserve entity order.
 
 Deterministic, self-hosted enrichment adds `position` and ICD-10/RxNorm
 `candidates` after model inference; those fields are not LoRA training targets.
@@ -75,13 +79,29 @@ Deterministic, self-hosted enrichment adds `position` and ICD-10/RxNorm
 | `assertions` | Required for diagnoses, drugs, and symptoms; empty when none apply |
 | `candidates` | ICD-10 strings for diagnoses; RxNorm strings for drugs; optional or empty for other types |
 
-Allowed `type` values are:
+### Assertions
 
-- `TRIỆU_CHỨNG`
-- `TÊN_XÉT_NGHIỆM`
-- `KẾT_QUẢ_XÉT_NGHIỆM`
-- `CHẨN_ĐOÁN`
-- `THUỐC`
+Only these assertion values are allowed:
+
+- `isNegated` — concept is negated in the text (e.g. `"không ho"`)
+- `isFamily` — concept refers to a relative, not the patient (e.g. family history phrasing)
+- `isHistorical` — concept refers to past medical history (e.g. `"có tiền sử hen suyễn"`)
+
+Assertions apply to `CHẨN_ĐOÁN`, `THUỐC`, and `TRIỆU_CHỨNG` only. When none apply,
+the entity must contain `"assertions": []`. At most three distinct assertion
+values may appear per entity. `TÊN_XÉT_NGHIỆM` and `KẾT_QUẢ_XÉT_NGHIỆM` always
+use an empty assertions array.
+
+Allowed `type` semantics (Vietnamese labels, English definitions in the system
+prompt):
+
+| Label | Meaning |
+| --- | --- |
+| `TRIỆU_CHỨNG` | Symptom name reported for the patient |
+| `TÊN_XÉT_NGHIỆM` | Laboratory or diagnostic test name |
+| `KẾT_QUẢ_XÉT_NGHIỆM` | Test result value (value and unit when present) |
+| `CHẨN_ĐOÁN` | Diagnosis assigned to the patient |
+| `THUỐC` | Medication used in treatment |
 
 Test names and test results are separate entities with separate spans. For
 example, `WBC` and `14,43` must not be combined into one entity.
@@ -98,17 +118,6 @@ entity.text == source[entity.position[0]:entity.position[1]]
 This convention is provisional until the organizer confirms it. Regardless of
 the final convention, every offset must be within the source bounds and resolve
 to the exact emitted `text`.
-
-### Assertions
-
-Only these assertion values are allowed:
-
-- `isNegated`
-- `isFamily`
-- `isHistorical`
-
-Assertions apply to `CHẨN_ĐOÁN`, `THUỐC`, and `TRIỆU_CHỨNG`. When none apply,
-the entity must contain `"assertions": []`.
 
 ### Ontology candidates
 

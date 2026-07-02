@@ -1,0 +1,33 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "text": {
+        "type": "string",
+        "minLength": 1
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "TRIỆU_CHỨNG",
+          "TÊN_XÉT_NGHIỆM",
+          "KẾT_QUẢ_XÉT_NGHIỆM",
+          "CHẨN_ĐOÁN",
+          "THUỐC"
+        ]
+      },
+      "assertions": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": ["isNegated", "isFamily", "isHistorical"]
+        },
+        "uniqueItems": true,
+        "maxItems": 3
+      }
+    },
+    "required": ["text", "type", "assertions"],
+    "additionalProperties": false
+  }
+}

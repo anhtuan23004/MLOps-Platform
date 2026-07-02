@@ -19,6 +19,17 @@ def load_system_prompt(path: Path) -> str:
     raise ValueError(f"system prompt not found in {path}")
 
 
+def resolve_system_prompt(config: dict) -> str:
+    if config.get("prompt_template", "medical") == "medical":
+        from llm_local.pipeline.medical_prompt import build_medical_extraction_system_prompt
+
+        return build_medical_extraction_system_prompt()
+    prompt_sample = config.get("prompt_sample")
+    if not prompt_sample:
+        raise ValueError("prompt_sample is required when prompt_template is not 'medical'")
+    return load_system_prompt(Path(prompt_sample))
+
+
 def record_key(path: Path) -> tuple[int, str]:
     return (int(path.stem), path.name) if path.stem.isdigit() else (sys.maxsize, path.name)
 
@@ -45,7 +56,7 @@ def main(argv: list[str] | None = None) -> int:
         load_in_4bit=True,
     )
     FastLanguageModel.for_inference(model)
-    system_prompt = load_system_prompt(Path(config["prompt_sample"]))
+    system_prompt = resolve_system_prompt(config)
 
     output_dir.mkdir(parents=True, exist_ok=True)
     for stale in output_dir.glob("*.json"):
