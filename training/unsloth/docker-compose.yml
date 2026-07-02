@@ -18,6 +18,7 @@ services:
       - ./scripts:/workspace/scripts
       - ./configs:/workspace/configs
       - ../../models:/workspace/models
+      - ../../data:/workspace/data:ro
       - ../../training/pipeline:/workspace/pipeline
       - ../../llm_local:/workspace/llm_local:ro
     networks:

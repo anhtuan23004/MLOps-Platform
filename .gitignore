@@ -31,6 +31,7 @@ training/unsloth/work/*
 observation/dashboards/*.png
 observation/dashboards/*.csv
 # datasets/*
+/data/input/*
 
 # MLOps-Platform local artifacts
 config/active/

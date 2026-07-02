@@ -29,6 +29,7 @@ exist.
 | US-007 | MLflow Prompt Registry for continuous training | yes | yes | no | no | planned | docs/stories/epics/E03-mlflow-genai/US-007-mlflow-prompt-registry.md |
 | US-008 | Manifest-driven LLM text/conversation dataset loader | yes | yes | no | yes | in_progress | docs/stories/epics/E02-continuous-training/US-008-llm-dataset-loader.md |
 | US-011 | DVC subproject + S3 remote hardening | yes | yes | no | yes | planned | docs/stories/epics/E02-continuous-training/US-011-dvc-s3-remote-hardening/ |
+| US-012 | Public-test three-field inference and structural validation | yes | yes | no | no | in_progress | docs/stories/epics/E05-medical-concept-retrieval/US-012-public-test-inference-validation.md |
 
 ## Evidence Rules
 

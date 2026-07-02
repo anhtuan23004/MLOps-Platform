@@ -350,7 +350,9 @@ flowchart LR
   train --> mlflow[MLflow run + model version]
   train --> run[(run manifest)]
   run --> eval[evaluate]
+  publicInput[(data/input public test)] --> eval
   dvc -. orchestrates .-> eval
+  eval --> predictions[(three-field predictions)]
   eval --> report[(eval report)]
   manifest --> register[register]
   run --> register
@@ -372,6 +374,12 @@ declared `train` split from that manifest before invoking Unsloth.
 without GPU. Real weights require a GPU VM and `train.dry_run: false`. If DVC
 is not installed, the runner preserves the same stage order using its
 sequential fallback, but that path does not provide DVC cache semantics.
+
+For US-012, `evaluate` invokes the newly trained adapter on `data/input/` and
+validates intermediate `text` / `type` / `assertions` predictions. Because the
+public input has no labels, this gate proves structure and coverage only; it
+does not claim accuracy or F1. Position and ontology candidates are separate
+downstream enrichment boundaries.
 
 ### 2. Manual model onboarding
 
@@ -401,7 +409,7 @@ llm-local release rollback --env <env> [--apply-serving]
 | -------------------- | ----------------------------- | ---------------------------------- |
 | Latency / throughput | `llm-local eval run`          | Benchmark JSON under `evaluation/` |
 | Quality (lm-eval)    | `llm-local eval quality`      | Harness output                     |
-| CT gate              | `pipeline/stages/evaluate.py` | `ct_eval_report.json`              |
+| CT structural gate   | `pipeline/stages/evaluate.py` | Predictions + `ct_eval_report.json` |
 
 
 ### 5. Validation harness

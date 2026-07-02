@@ -3,6 +3,7 @@
 | Script | Role |
 | --- | --- |
 | `finetune_lora.py` | US-004 Unsloth LoRA entrypoint (runs inside `unsloth` container) |
+| `predict_structured.py` | US-012 structured inference with the newly trained adapter |
 
 Invoked by `llm_local/pipeline/unsloth_runner.py` via `docker exec` when
 `train.dry_run` is false.

@@ -12,9 +12,11 @@ Create story packets when work is selected, not before.
 | M04-production-observability | Define dashboards, alerts, runbooks, and evidence freshness for promoted models. | candidate |
 | M05-continuous-training | MLflow + DVC pipeline on S3 with scheduled and data-driven retrain. | in_progress |
 | M06-mlflow-genai | MLflow GenAI: model registry, tracing, eval gates, prompt registry. | planned |
+| M07-medical-concept-retrieval | Reproducible medical entity extraction, assertion classification, and ICD-10/RxNorm normalization for the round-one competition. | in_progress |
 
 ## Next Selected Story
 
+- [`US-012`](epics/E05-medical-concept-retrieval/US-012-public-test-inference-validation.md) — Public-test structured inference validation (in progress; GPU proof pending)
 - [`US-008`](epics/E02-continuous-training/US-008-llm-dataset-loader.md) — Manifest-driven LLM dataset loader (in progress; GPU proof pending)
 - [`US-011`](epics/E02-continuous-training/US-011-dvc-s3-remote-hardening/) — DVC + MinIO dev / S3 prod hardening (planned)
 - [`US-003`](epics/E02-continuous-training/US-003-mlflow-dvc-pipeline.md) — MLflow + DVC continuous training (implemented)
@@ -54,6 +56,12 @@ See [`epics/E03-mlflow-genai/README.md`](epics/E03-mlflow-genai/README.md).
 | [US-005](epics/E03-mlflow-genai/US-005-mlflow-serving-traces.md) | MLflow Tracing on serving path | in_progress |
 | [US-006](epics/E03-mlflow-genai/US-006-mlflow-genai-eval-gate.md) | MLflow GenAI Evaluation gate | planned |
 | [US-007](epics/E03-mlflow-genai/US-007-mlflow-prompt-registry.md) | MLflow Prompt Registry | planned |
+
+## Epic E05 — Medical concept retrieval (in progress)
+
+| Story | Title | Status |
+| --- | --- | --- |
+| [US-012](epics/E05-medical-concept-retrieval/US-012-public-test-inference-validation.md) | Public-test structured inference validation | in_progress |
 
 ## Intake Notes
 

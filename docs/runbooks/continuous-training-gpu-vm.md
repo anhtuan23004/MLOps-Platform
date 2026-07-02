@@ -22,6 +22,10 @@ Runbook for **US-004**: real Unsloth fine-tune with MLflow Model Registry.
 vim config/env/mlflow.env      # defaults: local MinIO + Postgres; prod: external S3
 vim config/pipeline/params.yaml  # set train.dry_run: false
 
+# Place the organizer archive in data/ on every new host, then extract it.
+unzip data/input.zip -d data
+test "$(find data/input -maxdepth 1 -name '*.txt' | wc -l)" -eq 100
+
 # 2. Start services
 ./llm-local train mlflow up
 ./llm-local train up           # Unsloth GPU container
@@ -37,7 +41,14 @@ export CT_DRY_RUN=false
 # - training/pipeline/models/artifacts/staging/ adapter files
 # - training/pipeline/models/artifacts/run_manifest.json → mlflow.model_uri
 # - Draft release in data/release-registry/
+# - training/pipeline/evaluation/predictions/ contains 100 JSON files
+# - ct_eval_report.json has ground_truth_available=false and no structural errors
 ```
+
+All paths in `config/pipeline/params.yaml` are repository-relative. Do not put
+developer-machine absolute paths in committed config. Before moving to another
+host, pin `UNSLOTH_IMAGE_TAG` to the exact GPU-tested image tag; `latest` is not
+reproducible evidence.
 
 ## Simulate without GPU (dev only)
 

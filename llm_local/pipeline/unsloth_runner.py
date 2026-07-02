@@ -14,7 +14,9 @@ PIPELINE_ROOT = ROOT / "training" / "pipeline"
 UNSLOTH_WORK = ROOT / "training" / "unsloth" / "work"
 DEFAULT_CONTAINER = "unsloth"
 DEFAULT_SCRIPT = "/workspace/scripts/finetune_lora.py"
+DEFAULT_INFERENCE_SCRIPT = "/workspace/scripts/predict_structured.py"
 CONTAINER_CONFIG_PATH = "/workspace/work/ct_train_config.json"
+CONTAINER_EVAL_CONFIG_PATH = "/workspace/work/ct_eval_config.json"
 
 
 def container_running(name: str) -> bool:
@@ -127,6 +129,86 @@ def run_unsloth_training(
     }
 
 
+def run_unsloth_inference(
+    params: dict[str, Any],
+    *,
+    input_dir: Path,
+    output_dir: Path,
+    simulate: bool,
+) -> int:
+    """Generate public-test predictions with the newly trained adapter."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for stale in output_dir.glob("*.json"):
+        stale.unlink()
+
+    files = sorted(input_dir.glob("*.txt"))
+    if simulate:
+        for source in files:
+            (output_dir / f"{source.stem}.json").write_text("[]\n")
+        return len(files)
+
+    adapter_dir = PIPELINE_ROOT / "models" / "artifacts" / "staging"
+    prompt_sample = PIPELINE_ROOT / "data" / "examples" / "medical-concept-extraction.sample.jsonl"
+    if not (adapter_dir / "adapter_config.json").is_file() or not any(
+        (adapter_dir / name).is_file() for name in ("adapter_model.safetensors", "adapter_model.bin")
+    ):
+        raise RuntimeError(f"trained LoRA adapter is incomplete: {adapter_dir}")
+    if not prompt_sample.is_file():
+        raise RuntimeError(f"structured prompt sample not found: {prompt_sample}")
+
+    train_cfg = params.get("train", {})
+    eval_cfg = params.get("evaluate", {})
+    unsloth_cfg = train_cfg.get("unsloth", {})
+    container = str(unsloth_cfg.get("container", os.environ.get("UNSLOTH_CONTAINER", DEFAULT_CONTAINER)))
+    script = str(unsloth_cfg.get("inference_script", DEFAULT_INFERENCE_SCRIPT))
+    if not container_running(container):
+        raise RuntimeError(
+            f"Unsloth container {container!r} is not running. "
+            "Start it with: ./llm-local train up"
+        )
+
+    try:
+        container_input = "/workspace/data/" + input_dir.resolve().relative_to(
+            (ROOT / "data").resolve()
+        ).as_posix()
+        container_output = "/workspace/pipeline/" + output_dir.resolve().relative_to(
+            PIPELINE_ROOT.resolve()
+        ).as_posix()
+    except ValueError as exc:
+        raise RuntimeError(
+            "evaluation paths must stay under data/ and training/pipeline/"
+        ) from exc
+
+    config = {
+        "adapter_path": "/workspace/pipeline/models/artifacts/staging",
+        "input_dir": container_input,
+        "output_dir": container_output,
+        "prompt_sample": "/workspace/pipeline/data/examples/medical-concept-extraction.sample.jsonl",
+        "max_seq_length": int(train_cfg.get("max_seq_length", 2048)),
+        "max_new_tokens": int(eval_cfg.get("max_new_tokens", 2048)),
+    }
+    UNSLOTH_WORK.mkdir(parents=True, exist_ok=True)
+    config_path = UNSLOTH_WORK / "ct_eval_config.json"
+    payload = json.dumps(config, indent=2) + "\n"
+    try:
+        config_path.write_text(payload)
+    except PermissionError:
+        _write_container_config(container, payload, CONTAINER_EVAL_CONFIG_PATH)
+
+    result = subprocess.run(
+        ["docker", "exec", container, "python", script, CONTAINER_EVAL_CONFIG_PATH],
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    if result.stdout:
+        print(result.stdout, end="" if result.stdout.endswith("\n") else "\n")
+    if result.returncode != 0:
+        print(result.stderr, file=os.sys.stderr)
+        raise RuntimeError(f"Unsloth inference failed with exit code {result.returncode}")
+    return len(files)
+
+
 def _simulate_training(staging: Path, params: dict[str, Any], manifest: dict[str, Any]) -> dict[str, Any]:
     train_cfg = params.get("train", {})
     model_cfg = params.get("model", {})
@@ -165,11 +247,15 @@ def sync_staging_artifacts(staging: Path) -> None:
         raise RuntimeError(f"Expected artifact staging directory missing: {staging}")
 
 
-def _write_container_config(container: str, payload: str) -> None:
+def _write_container_config(
+    container: str,
+    payload: str,
+    container_path: str = CONTAINER_CONFIG_PATH,
+) -> None:
     result = subprocess.run(
         ["docker", "exec", "-i", "-u", "0", container, "python", "-c", (
             "from pathlib import Path; import sys; "
-            f"Path('{CONTAINER_CONFIG_PATH}').write_text(sys.stdin.read())"
+            f"Path('{container_path}').write_text(sys.stdin.read())"
         )],
         input=payload,
         text=True,
