@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
-import pytest
+import io
 
+import pytest
+from ruamel.yaml import YAML
+
+from llm_local.releases.cli import _print_record
 from llm_local.releases.schema import ReleaseError
 from llm_local.releases.store import ReleaseStore
 
@@ -83,3 +87,14 @@ def test_validate_clean_registry(tmp_path):
     store = ReleaseStore(tmp_path)
     _create_draft(store, "rel-val")
     assert store.validate() == []
+
+
+def test_print_record_outputs_yaml(capsys):
+    record = {"release_id": "rel-001", "promotion_state": "draft"}
+
+    _print_record(record)
+
+    out = capsys.readouterr().out
+    loaded = YAML().load(io.StringIO(out))
+    assert loaded["release_id"] == "rel-001"
+    assert loaded["promotion_state"] == "draft"

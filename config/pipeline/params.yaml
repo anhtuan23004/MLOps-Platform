@@ -1,6 +1,11 @@
 dataset:
   source: data/raw
   version_tag: v1
+  format: conversation
+  splits:
+    train: train.jsonl
+    val: val.jsonl
+    test: test.jsonl
 
 model:
   name: mlops-ct-model

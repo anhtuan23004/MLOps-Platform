@@ -98,7 +98,16 @@ def check_training_pipeline(runner: ValidationRunner) -> None:
     runner.check("tracing module syntax", [sys.executable, "-m", "py_compile", "llm_local/serving/tracing.py"])
     runner.check(
         "training pipeline unit tests",
-        [sys.executable, "-m", "pytest", "tests/test_training_pipeline.py", "tests/test_us004_train.py", "tests/test_us005_tracing.py", "-q"],
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "tests/test_llm_dataset.py",
+            "tests/test_training_pipeline.py",
+            "tests/test_us004_train.py",
+            "tests/test_us005_tracing.py",
+            "-q",
+        ],
     )
 
 
@@ -127,6 +136,7 @@ def check_release_registry(runner: ValidationRunner) -> None:
             "-f",
             str(REGISTRY_COMPOSE),
             "run",
+            "--build",
             "--rm",
             "--entrypoint",
             "bash",

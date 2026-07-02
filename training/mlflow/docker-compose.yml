@@ -1,6 +1,9 @@
 services:
   mlflow:
-    image: dhi.io/mlflow:3
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mlops-platform/mlflow:3-boto3
     command:
       - server
       - --host
@@ -17,6 +20,7 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
       AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
       AWS_ENDPOINT_URL: ${AWS_ENDPOINT_URL:-}
+      MLFLOW_SERVER_ALLOWED_HOSTS: ${MLFLOW_SERVER_ALLOWED_HOSTS:-localhost,localhost:15000,127.0.0.1,127.0.0.1:15000,mlflow,mlflow:5000}
       MLFLOW_S3_BUCKET: ${MLFLOW_S3_BUCKET:-mlops-platform}
       MLFLOW_S3_IGNORE_TLS: ${MLFLOW_S3_IGNORE_TLS:-false}
     ports:

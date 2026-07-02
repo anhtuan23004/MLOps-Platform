@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import io
 import sys
 from pathlib import Path
 from typing import Sequence
@@ -34,7 +35,9 @@ def _parse_dataset_versions(raw: str) -> dict[str, str]:
 
 
 def _print_record(record: dict) -> None:
-    print(yaml.dump(record))
+    stream = io.StringIO()
+    yaml.dump(record, stream)
+    print(stream.getvalue(), end="")
 
 
 def _build_parser() -> argparse.ArgumentParser:

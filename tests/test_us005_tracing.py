@@ -61,3 +61,15 @@ def test_prepare_litellm_serving_off(tmp_path, monkeypatch):
     enabled = prepare_litellm_serving(cfg)
     assert enabled is False
     assert "MLFLOW_TRACKING_URI" not in env_file.read_text()
+
+
+def test_litellm_compose_exposes_mlflow_env_vars():
+    compose = Path("serving/litellm/docker-compose.yml").read_text()
+    assert "MLFLOW_TRACKING_URI: ${MLFLOW_TRACKING_URI:-}" in compose
+    assert "MLFLOW_EXPERIMENT_NAME: ${MLFLOW_EXPERIMENT_NAME:-}" in compose
+
+
+def test_litellm_compose_uses_local_mlflow_enabled_image():
+    compose = Path("serving/litellm/docker-compose.yml").read_text()
+    assert "image: mlops-platform/litellm:${LITELLM_IMAGE_TAG:-latest}" in compose
+    assert "dockerfile: Dockerfile" in compose

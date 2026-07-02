@@ -14,5 +14,5 @@ mlflow:
     evaluation: mlops-platform-eval
 
 genai:
-  tracing_enabled: false
+  tracing_enabled: true
   litellm_success_callback: mlflow

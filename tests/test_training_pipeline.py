@@ -43,6 +43,8 @@ def test_prepare_data(pipeline_env):
     manifest = json.loads((pipeline_env / "data/processed/dataset_manifest.json").read_text())
     assert "dataset_id" in manifest
     assert "splits" in manifest
+    assert manifest["schema"]["name"] == "llm-sft-jsonl"
+    assert manifest["schema"]["format"] == "conversation"
 
 
 def test_full_dry_run_pipeline(pipeline_env):

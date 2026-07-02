@@ -53,6 +53,23 @@ latency in the MLflow UI alongside Prometheus dashboards.
 
 ## Evidence
 
-Unit + integration: `tests/test_us005_tracing.py`, `./llm-local validate integration` (tracing off).
+<!-- evidence-metadata
+validated_at: 2026-06-27
+host_type: local
+gpu: none
+commands:
+- .venv/bin/python -m pytest tests/test_us005_tracing.py -q
+- make validate-quick
+- make test-integration
+stale_when:
+- llm_local/serving/tracing.py changes
+- config/mlflow-genai.yaml changes
+- config/env/litellm.env changes
+- config/env/litellm.env.example changes
+-->
+
+Local proof (2026-06-27): tracing config tests passed 4/4. `make
+validate-quick` passed with tracing disabled, and `make test-integration`
+passed with tracing module and config checks included.
 
 Pending platform proof (trace visible in MLflow UI after chat request).

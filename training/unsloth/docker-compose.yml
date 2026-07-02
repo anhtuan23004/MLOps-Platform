@@ -4,6 +4,7 @@ services:
     container_name: unsloth
     restart: unless-stopped
     environment:
+      PYTHONPATH: /workspace
       JUPYTER_PASSWORD: "passd"
       USER_PASSWORD: "12345678"
       # JUPYTER_PORT: 8888
@@ -18,6 +19,7 @@ services:
       - ./configs:/workspace/configs
       - ../../models:/workspace/models
       - ../../training/pipeline:/workspace/pipeline
+      - ../../llm_local:/workspace/llm_local:ro
     networks:
       - llm-net
 

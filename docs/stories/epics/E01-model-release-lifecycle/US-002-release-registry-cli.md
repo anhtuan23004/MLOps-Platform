@@ -51,22 +51,26 @@ Implement a file-based release registry with `llm-local release` commands that:
 ## Evidence
 
 <!-- evidence-metadata
-validated_at: 2026-06-24
+validated_at: 2026-06-27
 host_type: local
 gpu: none
 image_tags:
-- none (compose workflow skipped: Docker unavailable on validation host)
+- release_registry-release-registry (integration workflow container)
 model_ids:
 - none
 commands:
 - uv sync --extra test
 - .venv/bin/python -m pytest tests/test_release_registry.py -q
-- .venv/bin/python -m llm_local.validation integration
+- make test-integration
 stale_when:
 - release schema changes
-- registry/docker-compose.yml changes
+- llm_local/releases/cli.py changes
+- llm_local/validation.py changes
+- tests/integration/release_registry/docker-compose.yml changes
+- tests/integration/release_registry/scripts/integration-workflow.sh changes
 -->
 
-Local proof (2026-06-24): 5/5 pytest passed; integration ladder passed with
-compose workflow skipped (Docker daemon not running). VM platform proof pending
-per runbook `docs/runbooks/release-promotion-vm.md`.
+Local proof (2026-06-27): pytest 6/6 passed, including CLI YAML output
+regression coverage. `make test-integration` passed 32/32, including the
+registry Docker Compose metadata workflow. VM platform proof remains pending per
+runbook `docs/runbooks/release-promotion-vm.md`.

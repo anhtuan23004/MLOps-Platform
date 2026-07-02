@@ -13,7 +13,14 @@ def load_config(path: Path) -> dict:
     return json.loads(path.read_text())
 
 
-def write_summary(output_dir: Path, config: dict, final_loss: float) -> None:
+def write_summary(
+    output_dir: Path,
+    config: dict,
+    final_loss: float,
+    *,
+    rows_loaded: int | None = None,
+    data_format: str | None = None,
+) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     summary = {
         "final_loss": final_loss,
@@ -22,6 +29,10 @@ def write_summary(output_dir: Path, config: dict, final_loss: float) -> None:
         "base_model": config.get("base_model"),
         "dataset_id": config.get("dataset_id"),
     }
+    if rows_loaded is not None:
+        summary["rows_loaded"] = rows_loaded
+    if data_format is not None:
+        summary["data_format"] = data_format
     (output_dir / "training_summary.json").write_text(json.dumps(summary, indent=2) + "\n")
 
 
@@ -46,11 +57,13 @@ def simulate(config: dict, output_dir: Path) -> float:
 
 
 def train_with_unsloth(config: dict, output_dir: Path) -> float:
-    from unsloth import FastLanguageModel
-    import torch
     from datasets import Dataset
     from transformers import TrainingArguments
     from trl import SFTTrainer
+    from unsloth import FastLanguageModel
+    import torch
+
+    from llm_local.pipeline.dataset import DatasetValidationError, load_manifest_split
 
     model_path = config["base_model_path"]
     max_seq_length = int(config.get("max_seq_length", 2048))
@@ -83,21 +96,24 @@ def train_with_unsloth(config: dict, output_dir: Path) -> float:
         random_state=3407,
     )
 
-    # Minimal SFT rows when raw data is empty; replace with manifest-driven loader in follow-up.
-    sample_text = (
-        "User: Explain briefly what a neural network is.\n"
-        "Assistant: A neural network is a model that learns patterns from data."
-    )
-    dataset = Dataset.from_dict({"text": [sample_text] * max(10, batch_size * 2)})
+    try:
+        data_format, records = load_manifest_split(
+            Path(config["dataset_manifest"]),
+            pipeline_root=Path(config["dataset_root"]),
+            split=str(config.get("dataset_split", "train")),
+        )
+    except DatasetValidationError as exc:
+        raise RuntimeError(f"dataset load failed: {exc}") from exc
+
+    dataset = Dataset.from_list(records)
 
     max_steps = max(10, epochs * 10)
-    trainer = SFTTrainer(
-        model=model,
-        processing_class=tokenizer,
-        train_dataset=dataset,
-        dataset_text_field="text",
-        max_seq_length=max_seq_length,
-        args=TrainingArguments(
+    trainer_kwargs: dict = {
+        "model": model,
+        "processing_class": tokenizer,
+        "train_dataset": dataset,
+        "max_seq_length": max_seq_length,
+        "args": TrainingArguments(
             per_device_train_batch_size=batch_size,
             gradient_accumulation_steps=2,
             warmup_steps=2,
@@ -109,13 +125,23 @@ def train_with_unsloth(config: dict, output_dir: Path) -> float:
             output_dir=str(output_dir),
             report_to=[],
         ),
-    )
+    }
+    if data_format == "text":
+        trainer_kwargs["dataset_text_field"] = "text"
+
+    trainer = SFTTrainer(**trainer_kwargs)
     train_result = trainer.train()
     final_loss = float(train_result.training_loss) if train_result.training_loss is not None else 0.2
 
     model.save_pretrained(str(output_dir))
     tokenizer.save_pretrained(str(output_dir))
-    write_summary(output_dir, config, final_loss)
+    write_summary(
+        output_dir,
+        config,
+        final_loss,
+        rows_loaded=len(records),
+        data_format=data_format,
+    )
     return final_loss
 
 

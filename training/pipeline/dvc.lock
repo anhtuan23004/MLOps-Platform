@@ -5,32 +5,47 @@ stages:
     deps:
     - path: ../../config/pipeline/params.yaml
       hash: md5
-      md5: d6e4491d9074f1ece1f1af32563fa94d
-      size: 541
+      md5: 4fe693828857eeafc06eb75bb65d5738
+      size: 637
+    - path: ../../llm_local/pipeline/dataset.py
+      hash: md5
+      md5: 5e2e1ce48f2a5908138aee49b9378485
+      size: 4669
     - path: ../../llm_local/pipeline/stages/common.py
       hash: md5
       md5: 38e77ff8b68c14110836ad71d1a78917
       size: 1883
     - path: ../../llm_local/pipeline/stages/prepare_data.py
       hash: md5
-      md5: dac33fd62ca6980ce7c47e1345cba1c1
-      size: 1300
+      md5: a3682219c8a51080e51f842d9bb53505
+      size: 3454
+    - path: data/raw
+      hash: md5
+      md5: 2aadea3599dbcbc0b0135ec99beb4764.dir
+      size: 117
+      nfiles: 1
     params:
       ../../config/pipeline/params.yaml:
+        dataset.format: conversation
         dataset.source: data/raw
+        dataset.splits:
+          train: train.jsonl
+          val: val.jsonl
+          test: test.jsonl
         dataset.version_tag: v1
+        train.dry_run: true
     outs:
     - path: data/processed/dataset_manifest.json
       hash: md5
-      md5: c91def2bc116d298e48a6a59afe92592
-      size: 676
+      md5: 185734f0fb5d32cbaf1e06e4f0795767
+      size: 756
   train:
     cmd: ./run_stage.sh train
     deps:
     - path: ../../config/pipeline/params.yaml
       hash: md5
-      md5: d6e4491d9074f1ece1f1af32563fa94d
-      size: 541
+      md5: 4fe693828857eeafc06eb75bb65d5738
+      size: 637
     - path: ../../llm_local/pipeline/stages/common.py
       hash: md5
       md5: 38e77ff8b68c14110836ad71d1a78917
@@ -41,8 +56,8 @@ stages:
       size: 2148
     - path: data/processed/dataset_manifest.json
       hash: md5
-      md5: c91def2bc116d298e48a6a59afe92592
-      size: 676
+      md5: 185734f0fb5d32cbaf1e06e4f0795767
+      size: 756
     params:
       ../../config/pipeline/params.yaml:
         model.base_model: local/TinyLlama-1.1B-Chat-v1.0
@@ -53,15 +68,15 @@ stages:
     outs:
     - path: models/artifacts/run_manifest.json
       hash: md5
-      md5: 36fa17c1a54097f8c22ae43a83eb061c
+      md5: 210008a1365f96ba0ae41e70f731ae17
       size: 623
   evaluate:
     cmd: ./run_stage.sh evaluate
     deps:
     - path: ../../config/pipeline/params.yaml
       hash: md5
-      md5: d6e4491d9074f1ece1f1af32563fa94d
-      size: 541
+      md5: 4fe693828857eeafc06eb75bb65d5738
+      size: 637
     - path: ../../llm_local/pipeline/stages/common.py
       hash: md5
       md5: 38e77ff8b68c14110836ad71d1a78917
@@ -72,7 +87,7 @@ stages:
       size: 1096
     - path: models/artifacts/run_manifest.json
       hash: md5
-      md5: 36fa17c1a54097f8c22ae43a83eb061c
+      md5: 210008a1365f96ba0ae41e70f731ae17
       size: 623
     params:
       ../../config/pipeline/params.yaml:
@@ -80,15 +95,15 @@ stages:
     outs:
     - path: evaluation/results/ct_eval_report.json
       hash: md5
-      md5: ff146af65c1f243af0e570dcf6662ea2
+      md5: e9cdf8271c7253a1288fc615506a83b6
       size: 200
   register:
     cmd: ./run_stage.sh register
     deps:
     - path: ../../config/pipeline/params.yaml
       hash: md5
-      md5: d6e4491d9074f1ece1f1af32563fa94d
-      size: 541
+      md5: 4fe693828857eeafc06eb75bb65d5738
+      size: 637
     - path: ../../llm_local/pipeline/stages/common.py
       hash: md5
       md5: 38e77ff8b68c14110836ad71d1a78917
@@ -99,11 +114,11 @@ stages:
       size: 2118
     - path: evaluation/results/ct_eval_report.json
       hash: md5
-      md5: ff146af65c1f243af0e570dcf6662ea2
+      md5: e9cdf8271c7253a1288fc615506a83b6
       size: 200
     - path: models/artifacts/run_manifest.json
       hash: md5
-      md5: 36fa17c1a54097f8c22ae43a83eb061c
+      md5: 210008a1365f96ba0ae41e70f731ae17
       size: 623
     params:
       ../../config/pipeline/params.yaml:
@@ -111,5 +126,5 @@ stages:
     outs:
     - path: data/pipeline/release_pointer.json
       hash: md5
-      md5: f90d8d148486f957fae283fa7e870812
+      md5: 41f71ced2990586a3ed8dc033c6102cc
       size: 218

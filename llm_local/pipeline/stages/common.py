@@ -57,6 +57,9 @@ def mlflow_tracking_uri() -> str:
 
 
 def dry_run_from_env_or_params(params: dict[str, Any]) -> bool:
-    if os.environ.get("CT_DRY_RUN", "").lower() in {"1", "true", "yes"}:
+    env_value = os.environ.get("CT_DRY_RUN", "").strip().lower()
+    if env_value in {"1", "true", "yes"}:
         return True
+    if env_value in {"0", "false", "no"}:
+        return False
     return bool(params.get("train", {}).get("dry_run", True))

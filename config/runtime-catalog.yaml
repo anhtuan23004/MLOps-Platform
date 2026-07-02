@@ -48,7 +48,7 @@ services:
     compose_file: serving/litellm/docker-compose.yml
     container: litellm
     image:
-      repository: docker.litellm.ai/berriai/litellm
+      repository: mlops-platform/litellm
       tag_env: LITELLM_IMAGE_TAG
       default_tag: latest
     host_port:
@@ -97,8 +97,8 @@ services:
     compose_file: training/mlflow/docker-compose.yml
     container: mlflow
     image:
-      repository: dhi.io/mlflow
-      default_tag: "3"
+      repository: mlops-platform/mlflow
+      default_tag: 3-boto3
     host_port:
       env: MLFLOW_HOST_PORT
       default: 15000
