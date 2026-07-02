@@ -6,7 +6,8 @@ versus planned. Product behavior contracts live in `docs/product/`; this file
 describes system shape and boundaries.
 
 Last aligned with: US-001 (lifecycle), US-002 (release registry), US-003
-(MLflow + DVC continuous training), US-004 (GPU train + Model Registry).
+(MLflow + DVC continuous training), US-004 (GPU train + Model Registry),
+US-005 (serving traces, in progress), and US-008 (LLM dataset loader, in progress).
 
 ## Design goals
 
@@ -24,46 +25,114 @@ Last aligned with: US-001 (lifecycle), US-002 (release registry), US-003
 
 ```mermaid
 flowchart TB
-  subgraph dev [Development / experiment]
-    unsloth[Unsloth Jupyter]
-    manual[Manual download / convert]
+  subgraph entry [Entry points]
+    operator[Operator / Makefile]
+    cron[Cron]
+    client[LLM client]
   end
 
-  subgraph ct [Continuous training]
-    dvc[DVC pipeline]
-    mlflow[MLflow tracking]
-    s3[(S3-compatible storage)]
+  subgraph control [Control plane — llm_local]
+    cli[llm-local CLI]
+    catalog[Runtime catalog + config]
+    runner[Pipeline runner]
+    releaseCli[Release CLI]
+    modelManager[Model inventory manager]
   end
 
-  subgraph registry [Registries]
-    inv[Model inventory<br/>models/registry.yaml]
-    rel[Release registry<br/>data/release-registry/]
+  subgraph training [Data + training plane]
+    raw[JSONL train / val / test]
+    dvc[DVC stage DAG]
+    prepare[prepare_data<br/>validate schema + checksum]
+    manifest[(dataset_manifest.json)]
+    train[train]
+    unsloth[Unsloth LoRA]
+    artifacts[(adapter / checkpoint bundle)]
+    runManifest[(run_manifest.json)]
+    evaluate[evaluate]
+    evalReport[(ct_eval_report.json)]
+    register[register]
+  end
+
+  subgraph stores [Metadata + artifact stores]
+    mlflow[MLflow tracking + Model Registry]
+    mlflowBackend[(MLflow metadata backend<br/>file or external Postgres)]
+    objectStore[(S3-compatible object store<br/>DVC + MLflow artifacts)]
+    inventory[(Local model inventory)]
+    releaseStore[(Release registry<br/>releases + aliases + audit)]
   end
 
   subgraph serving [Serving plane]
-    vllm[vLLM runtime]
     litellm[LiteLLM gateway]
+    vllm[vLLM runtime]
   end
 
-  subgraph observe [Observation]
+  subgraph observe [Observation plane]
     prom[Prometheus]
     graf[Grafana]
+    gpu[NVIDIA GPU exporter<br/>optional profile]
   end
 
-  dev --> inv
-  dvc --> mlflow
-  dvc --> s3
-  dvc --> rel
-  mlflow --> s3
-  rel -->|promote --apply-serving| vllm
-  inv --> vllm
-  vllm --> litellm
+  operator --> cli
+  cron --> cli
+  cli --> catalog
+  cli --> runner
+  cli --> releaseCli
+  cli --> modelManager
+
+  runner --> dvc
+  dvc --> prepare
+  dvc --> train
+  dvc --> evaluate
+  dvc --> register
+  raw --> prepare
+  prepare --> manifest
+  manifest --> train
+  train --> unsloth
+  unsloth --> artifacts
+  train --> runManifest
+  runManifest --> evaluate
+  evaluate --> evalReport
+  manifest --> register
+  runManifest --> register
+  evalReport --> register
+
+  train --> mlflow
+  artifacts --> mlflow
+  mlflow --> mlflowBackend
+  mlflow --> objectStore
+  dvc -.->|push / pull| objectStore
+  register --> releaseStore
+
+  modelManager --> inventory
+  releaseCli --> releaseStore
+  releaseCli --> modelManager
+  inventory -->|selected model path| vllm
+
+  client --> litellm
+  litellm --> vllm
+  litellm -.->|serving traces — US-005| mlflow
   vllm --> prom
   litellm --> prom
+  gpu --> prom
   prom --> graf
+
+  classDef control fill:#dbeafe,stroke:#2563eb,color:#172554
+  classDef workload fill:#ffedd5,stroke:#ea580c,color:#431407
+  classDef store fill:#f3e8ff,stroke:#9333ea,color:#3b0764
+  classDef runtime fill:#dcfce7,stroke:#16a34a,color:#052e16
+  classDef observe fill:#f1f5f9,stroke:#64748b,color:#0f172a
+
+  class cli,catalog,runner,releaseCli,modelManager control
+  class raw,dvc,prepare,manifest,train,unsloth,artifacts,runManifest,evaluate,evalReport,register workload
+  class mlflow,mlflowBackend,objectStore,inventory,releaseStore store
+  class client,litellm,vllm runtime
+  class prom,graf,gpu observe
 ```
 
-
+Solid arrows show current control or data flow. The dotted LiteLLM → MLflow
+edge is configured by US-005 but remains `in_progress` in the test matrix.
+MLflow GenAI evaluation and Prompt Registry (US-006/US-007) are planned and
+therefore are not shown as active runtime paths.
 
 ## Architectural planes
 
@@ -72,7 +141,7 @@ flowchart TB
 | --------------- | -------------------------------------------------- | -------------------------------------------------------------------- |
 | **Control**     | CLI, validation, guardrails, compose orchestration | `llm_local/`, `llm-local`, `config/runtime-catalog.yaml`             |
 | **Data**        | Weights, datasets, conversion                      | `models/`, `training/pipeline/data/`                                 |
-| **Artifact**    | Checkpoints, eval reports, release records         | `training/pipeline/models/`, `evaluation/`, `data/release-registry/` |
+| **Artifact**    | Checkpoints, eval reports, release records         | `training/pipeline/models/`, MLflow artifact store, `data/release-registry/` |
 | **Workload**    | Training, conversion, benchmark jobs               | `training/`, `evaluation/` (Docker Compose)                          |
 | **Serving**     | Inference runtime and gateway                      | `serving/vllm/`, `serving/litellm/`                                  |
 | **Observation** | Metrics, dashboards, batch reports, MLflow traces (US-005) | `observation/`, MLflow UI via `training/mlflow/` |
@@ -90,6 +159,7 @@ llm_local/
   validation.py          # Validation ladder (quick / integration / platform / release)
   models/                # Inventory: download, registry, presets, manage (select/rm)
   pipeline/
+    dataset.py           # Validate/load manifest-backed LLM JSONL splits
     runner.py            # dvc repro / schedule wrappers
     stages/              # DVC stage implementations
       prepare_data.py
@@ -174,17 +244,23 @@ Code resolves paths via `llm_local/config_paths.py`. Docker Compose loads
 Model weights and large artifacts are **not** product truth in git; lineage is
 carried by sidecars, DVC manifests, MLflow runs, and release records.
 
-### Release and inventory (two registries)
+### Registry boundaries
 
 
-| Registry             | Purpose                                          | Path                     |
-| -------------------- | ------------------------------------------------ | ------------------------ |
-| **Model inventory**  | What exists locally, format, serving targets     | `models/registry.yaml`   |
-| **Release registry** | Promotion state, lineage, eval refs, env aliases | `data/release-registry/` |
+| Registry                  | Purpose                                               | Location                 |
+| ------------------------- | ----------------------------------------------------- | ------------------------ |
+| **Local model inventory** | What exists locally, format, serving targets          | `models/registry.yaml`   |
+| **MLflow Model Registry** | Training runs, artifact versions, MLflow aliases      | MLflow backend           |
+| **Release registry**      | Promotion state, lineage, eval refs, runtime aliases  | `data/release-registry/` |
 
 
 Promotion states: `draft` → `candidate` → `approved` → `promoted` → `retired`.  
 Environments: `dev`, `staging`, `prod`.
+
+These stores are intentionally distinct. The current serving promotion path
+resolves a release's `source_artifact` through the **local model inventory**;
+an MLflow registered model version is retained as training lineage and is not
+loaded directly by vLLM.
 
 See `docs/product/model-releases.md` and `docs/product/model-release-lifecycle.md`.
 
@@ -245,7 +321,7 @@ MLOps-Platform/
 | Gateway                | LiteLLM                            | API key auth, model routing           |
 | Training (interactive) | Unsloth container                  | Jupyter + GPU                         |
 | Training (automated)   | DVC pipeline + Python stages       | No Airflow/Prefect                    |
-| Experiment tracking    | MLflow 3.14.0 (DHI)                | Local: Postgres + MinIO; prod: S3 |
+| Experiment tracking    | MLflow 3.x wrapper image           | Metadata backend and S3-compatible artifact store supplied by environment |
 | Data versioning        | DVC                                | S3-compatible remote                  |
 | Scheduling             | cron via `train pipeline schedule` | Optional daily trigger                |
 | Model download         | Hugging Face Hub                   | `llm_local.models.download`           |
@@ -259,22 +335,43 @@ operators, feature store, automated drift-triggered retrain.
 
 ## End-to-end flows
 
-### 1. Continuous training (US-003)
+### 1. Continuous training (US-003, US-004, US-008)
 
-```text
-Trigger: dvc repro (data/params change) OR cron → llm-local train pipeline run
-  → prepare_data   → dataset_manifest.json
-  → train          → run_manifest.json (+ MLflow run when configured)
-  → evaluate       → ct_eval_report.json
-  → register       → draft release in release registry + release_pointer.json
-Operator: attach-eval → submit → approve → promote --to dev [--apply-serving]
+```mermaid
+flowchart LR
+  trigger[CLI / cron / data change] --> dvc[DVC repro]
+  raw[JSONL splits] --> prepare[prepare_data]
+  dvc -. orchestrates .-> prepare
+  prepare --> manifest[(dataset manifest)]
+  manifest --> train[train]
+  dvc -. orchestrates .-> train
+  train --> unsloth[Unsloth]
+  unsloth --> bundle[(adapter bundle)]
+  train --> mlflow[MLflow run + model version]
+  train --> run[(run manifest)]
+  run --> eval[evaluate]
+  dvc -. orchestrates .-> eval
+  eval --> report[(eval report)]
+  manifest --> register[register]
+  run --> register
+  report --> register
+  dvc -. orchestrates .-> register
+  register --> release[(draft release)]
+  release --> gates[submit → approve → promote]
+  gates -->|--apply-serving| serving[vLLM serving]
 ```
 
 Orchestration is **DVC stage DAG**, not a separate workflow engine. See
 `docs/decisions/002-mlflow-dvc-s3-continuous-training.md`.
 
-`train.dry_run: true` in `config/pipeline/params.yaml` allows CI/laptop runs without GPU;
-real weights require a GPU VM and `train.dry_run: false`.
+`prepare_data` validates the configured `text` or `conversation` JSONL schema
+and records split paths, row counts, and checksums. The trainer reloads the
+declared `train` split from that manifest before invoking Unsloth.
+
+`train.dry_run: true` in `config/pipeline/params.yaml` allows CI/laptop runs
+without GPU. Real weights require a GPU VM and `train.dry_run: false`. If DVC
+is not installed, the runner preserves the same stage order using its
+sequential fallback, but that path does not provide DVC cache semantics.
 
 ### 2. Manual model onboarding
 
@@ -342,7 +439,7 @@ Groups: `serving`, `training`, `evaluation`, `observation`.
 3. **Promotion** advances release metadata first; serving changes are explicit
   (`--apply-serving` or preset render).
 4. **S3 / MLflow / DVC remote** must be provisioned before end-to-end CT works
-  on cloud storage (see `training/pipeline/.dvc/config.example`).
+  on cloud storage (see `config/dvc/config.example`).
 5. **Production-ready claims** require evidence in `docs/TEST_MATRIX.md`.
 
 ## Implementation status
@@ -357,6 +454,8 @@ Groups: `serving`, `training`, `evaluation`, `observation`.
 | MLflow server compose                   | implemented                    | US-003    |
 | Cron scheduler hook                     | implemented                    | US-003    |
 | Real Unsloth fine-tune in `train` stage | implemented                    | US-004    |
+| Manifest-backed LLM JSONL loader        | implemented; GPU proof pending | US-008    |
+| LiteLLM → MLflow serving traces         | implemented; platform proof pending | US-005 |
 | Auto-promote after eval gates           | not implemented                | backlog   |
 | Monitoring → retrain trigger            | not implemented                | backlog   |
 | Airflow / workflow orchestrator         | not planned (current phase)    | —         |
