@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from unittest.mock import patch
 
@@ -39,6 +40,20 @@ def test_unsloth_simulate_writes_staging(monkeypatch, tmp_path):
     assert result["final_loss"] == 0.21
 
 
+def test_train_config_points_container_to_dataset_manifest(tmp_path):
+    from llm_local.pipeline.unsloth_runner import build_train_config
+
+    config = build_train_config(
+        {"model": {"base_model": "local/sample-chat-small"}, "train": {}},
+        {"dataset_id": "ds-test-abc"},
+        tmp_path,
+    )
+
+    assert config["dataset_manifest"] == "/workspace/pipeline/data/processed/dataset_manifest.json"
+    assert config["dataset_root"] == "/workspace/pipeline"
+    assert config["dataset_split"] == "train"
+
+
 def test_train_non_dry_run_registers_mlflow(monkeypatch):
     monkeypatch.delenv("CT_DRY_RUN", raising=False)
     monkeypatch.setenv("UNSLOTH_TRAIN_SIMULATE", "1")
@@ -60,6 +75,7 @@ def test_train_non_dry_run_registers_mlflow(monkeypatch):
         "model_name": "mlops-ct-model",
         "model_version": 2,
         "model_uri": "models:/mlops-ct-model/2",
+        "registered_model_uri": "runs:/abc123/model_logged",
         "metrics": {"loss": 0.21, "epochs": 1},
         "dry_run": False,
     }
@@ -84,3 +100,17 @@ def test_train_non_dry_run_registers_mlflow(monkeypatch):
     assert run_manifest["dry_run"] is False
     assert run_manifest["mlflow"]["model_uri"] == "models:/mlops-ct-model/2"
     assert run_manifest["mlflow"]["model_version"] == 2
+    assert run_manifest["mlflow"]["registered_model_uri"] == "runs:/abc123/model_logged"
+
+
+def test_ct_dry_run_false_overrides_params(monkeypatch):
+    from llm_local.pipeline.stages.common import dry_run_from_env_or_params
+
+    monkeypatch.setenv("CT_DRY_RUN", "false")
+    assert dry_run_from_env_or_params({"train": {"dry_run": True}}) is False
+
+    monkeypatch.setenv("CT_DRY_RUN", "0")
+    assert dry_run_from_env_or_params({"train": {"dry_run": True}}) is False
+
+    monkeypatch.setenv("CT_DRY_RUN", "true")
+    assert dry_run_from_env_or_params({"train": {"dry_run": False}}) is True

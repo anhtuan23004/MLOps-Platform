@@ -1,6 +1,9 @@
 services:
   litellm:
-    image: docker.litellm.ai/berriai/litellm:${LITELLM_IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mlops-platform/litellm:${LITELLM_IMAGE_TAG:-latest}
     container_name: litellm
     command: ["--config", "/app/config.yaml", "--port", "${CONTAINER_PORT:-4000}"]
     environment:
@@ -8,6 +11,8 @@ services:
       VLLM_API_BASE: ${VLLM_API_BASE:-http://vllm:8000/v1}
       VLLM_API_KEY: ${VLLM_API_KEY:-sk-local-vllm}
       VLLM_LITELLM_MODEL: ${VLLM_LITELLM_MODEL:-openai/local/sample-chat-small}
+      MLFLOW_TRACKING_URI: ${MLFLOW_TRACKING_URI:-}
+      MLFLOW_EXPERIMENT_NAME: ${MLFLOW_EXPERIMENT_NAME:-}
     ports:
       - "${HOST_PORT:-18040}:${CONTAINER_PORT:-4000}"
     volumes:

@@ -2,5 +2,8 @@
     remote = s3remote
     autostage = true
 
+# Dev (MinIO): s3://mlops-platform/dvc-storage + AWS_ENDPOINT_URL=http://localhost:19000
+# Prod (AWS S3): s3://YOUR_PROD_BUCKET/dvc-storage — override in .dvc/config.local, no endpoint
+
 ['remote "s3remote"']
-    url = s3://YOUR_BUCKET/dvc-storage
+    url = s3://mlops-platform/dvc-storage

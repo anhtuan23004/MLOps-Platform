@@ -11,9 +11,10 @@ Docker Compose: `training/mlflow/docker-compose.yml`
 
 Default tracking URI: `http://localhost:15000` (override with `MLFLOW_TRACKING_URI`).
 
-Runtime image: `dhi.io/mlflow:3` (Docker Hardened Images). The service uses the
-image entrypoint directly, so the compose command is `server ...` rather than
-`mlflow server ...`.
+Runtime image: local wrapper `mlops-platform/mlflow:3-boto3`, built from
+`dhi.io/mlflow:3` (Docker Hardened Images) with `boto3` added for S3/MinIO
+artifact support. The service uses the image entrypoint directly, so the compose
+command is `server ...` rather than `mlflow server ...`.
 
 ## Local dev vs production
 

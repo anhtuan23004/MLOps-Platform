@@ -27,6 +27,8 @@ exist.
 | US-005 | MLflow Tracing on LiteLLM/vLLM serving path | yes | yes | no | yes | in_progress | docs/stories/epics/E03-mlflow-genai/US-005-mlflow-serving-traces.md |
 | US-006 | MLflow GenAI Evaluation as CT pipeline gate | yes | yes | no | yes | planned | docs/stories/epics/E03-mlflow-genai/US-006-mlflow-genai-eval-gate.md |
 | US-007 | MLflow Prompt Registry for continuous training | yes | yes | no | no | planned | docs/stories/epics/E03-mlflow-genai/US-007-mlflow-prompt-registry.md |
+| US-008 | Manifest-driven LLM text/conversation dataset loader | yes | yes | no | yes | in_progress | docs/stories/epics/E02-continuous-training/US-008-llm-dataset-loader.md |
+| US-011 | DVC subproject + S3 remote hardening | yes | yes | no | yes | planned | docs/stories/epics/E02-continuous-training/US-011-dvc-s3-remote-hardening/ |
 
 ## Evidence Rules
 
@@ -38,3 +40,10 @@ exist.
   behavior that cannot be proven in lower layers.
 - Production-ready claims require fresh release evidence with date, host,
   runtime, image/model identifiers, commands, and stale triggers.
+
+## Retired rows
+
+| Story | Reason |
+| --- | --- |
+| US-009 | Superseded by US-008 (dataset contract + loader combined) |
+| US-010 | Superseded by US-008 |

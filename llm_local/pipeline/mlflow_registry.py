@@ -2,11 +2,18 @@
 
 from __future__ import annotations
 
+import shutil
+import tempfile
 import uuid
 from pathlib import Path
 from typing import Any
 
 from llm_local.pipeline.stages.common import mlflow_tracking_uri
+
+
+class AdapterBundleModel:  # runtime base injected inside log_training_run import path
+    def predict(self, context: Any, model_input: Any, params: Any | None = None) -> Any:
+        return model_input
 
 
 def log_training_run(
@@ -39,7 +46,12 @@ def log_training_run(
         return run_info
 
     import mlflow
+    import mlflow.pyfunc
     from mlflow.tracking import MlflowClient
+
+    class _PyfuncAdapterBundleModel(mlflow.pyfunc.PythonModel):
+        def predict(self, context: Any, model_input: Any, params: Any | None = None) -> Any:
+            return AdapterBundleModel().predict(context, model_input, params)
 
     registered_name = str(model_cfg.get("name", "mlops-ct-model"))
     tracking_uri = mlflow_tracking_uri()
@@ -67,7 +79,16 @@ def log_training_run(
             raise RuntimeError(f"artifact_dir missing for MLflow logging: {artifact_dir}")
 
         run_id = run.info.run_id
-        model_uri = f"runs:/{run_id}/model"
+        with tempfile.TemporaryDirectory(prefix="mlflow-pyfunc-bundle-") as tmpdir:
+            bundle_dir = Path(tmpdir)
+            shutil.copytree(artifact_dir, bundle_dir / "artifacts", dirs_exist_ok=True)
+            mlflow.pyfunc.log_model(
+                artifact_path="model_logged",
+                python_model=_PyfuncAdapterBundleModel(),
+                artifacts={"bundle": str(bundle_dir / "artifacts")},
+            )
+
+        model_uri = f"runs:/{run_id}/model_logged"
         registered = mlflow.register_model(model_uri, registered_name)
         client = MlflowClient(tracking_uri=tracking_uri)
         client.set_registered_model_alias(registered_name, "staging", registered.version)

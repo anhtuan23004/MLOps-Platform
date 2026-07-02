@@ -8,6 +8,8 @@ CLI=(python -m llm_local.releases.cli --registry-root "$REGISTRY_ROOT")
 
 echo "=== Release registry integration workflow (metadata only) ==="
 
+rm -rf "$REGISTRY_ROOT"/releases "$REGISTRY_ROOT"/aliases "$REGISTRY_ROOT"/audit
+
 "${CLI[@]}" create \
   --id rel-integration-a \
   --name "Integration A" \

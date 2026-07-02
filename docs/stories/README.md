@@ -3,7 +3,11 @@
 Stories are work packets. They turn product intent into bounded implementation
 and validation work.
 
-No story packets are active yet.
+Active and planned story packets live under `docs/stories/epics/`. Use
+`docs/stories/backlog.md` as the current selection and status index.
+
+Epic folders may also include a `README.md` that captures epic goal, scope,
+story ordering, and linked product contracts.
 
 ## Normal Story
 
