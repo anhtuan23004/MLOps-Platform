@@ -183,7 +183,7 @@ def run_unsloth_inference(
         "adapter_path": "/workspace/pipeline/models/artifacts/staging",
         "input_dir": container_input,
         "output_dir": container_output,
-        "prompt_sample": "/workspace/pipeline/data/examples/medical-concept-extraction.sample.jsonl",
+        "prompt_template": "medical",
         "max_seq_length": int(train_cfg.get("max_seq_length", 2048)),
         "max_new_tokens": int(eval_cfg.get("max_new_tokens", 2048)),
     }

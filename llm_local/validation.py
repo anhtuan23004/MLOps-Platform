@@ -97,6 +97,19 @@ def check_training_pipeline(runner: ValidationRunner) -> None:
     runner.check("mlflow-genai.yaml exists", ["test", "-f", "config/mlflow-genai.yaml"])
     runner.check("tracing module syntax", [sys.executable, "-m", "py_compile", "llm_local/serving/tracing.py"])
     runner.check(
+        "medical extraction prompt template exists",
+        ["test", "-f", "config/prompts/medical-concept-extraction.system.txt"],
+    )
+    runner.check(
+        "medical extraction schema exists",
+        ["test", "-f", "config/prompts/medical-concept-extraction.schema.json"],
+    )
+    runner.check_python(
+        "medical extraction system prompt builds",
+        "from llm_local.pipeline.medical_prompt import build_medical_extraction_system_prompt; "
+        "assert 'JSON Schema:' in build_medical_extraction_system_prompt()",
+    )
+    runner.check(
         "structured inference script syntax",
         [sys.executable, "-m", "py_compile", "training/unsloth/scripts/predict_structured.py"],
     )
@@ -122,6 +135,7 @@ def check_training_pipeline(runner: ValidationRunner) -> None:
             "tests/test_training_pipeline.py",
             "tests/test_us004_train.py",
             "tests/test_us005_tracing.py",
+            "tests/test_medical_prompt.py",
             "-q",
         ],
     )

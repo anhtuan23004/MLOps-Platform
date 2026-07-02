@@ -17,6 +17,8 @@ paths:
   release_registry_default: data/release-registry
   active_serving_state: config/active/serving.yaml
   active_litellm_config: config/active/litellm-config.yaml
+  medical_extraction_system: config/prompts/medical-concept-extraction.system.txt
+  medical_extraction_schema: config/prompts/medical-concept-extraction.schema.json
 
 # env_profile keys referenced by config/runtime-catalog.yaml → services.*.env_profile
 env:

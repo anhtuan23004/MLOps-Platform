@@ -18,6 +18,8 @@ assets only.
 | `litellm/config.yaml` | LiteLLM gateway routing config |
 | `litellm/config.tracing.yaml` | LiteLLM + MLflow callback (US-005) |
 | `mlflow-genai.yaml` | Tracing / eval / prompt registry settings |
+| `prompts/medical-concept-extraction.system.txt` | English system prompt prose (VN entity labels) |
+| `prompts/medical-concept-extraction.schema.json` | Structural JSON Schema for model output |
 | `env/*.env.example` | Per-service environment templates |
 | `env/*.env` | Local overrides (gitignored; copy from `.example`) |
 | `active/serving.yaml` | Generated active preset state (gitignored) |
