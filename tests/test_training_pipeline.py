@@ -57,6 +57,86 @@ def test_full_dry_run_pipeline(pipeline_env):
 
     run_manifest = json.loads((pipeline_env / "models/artifacts/run_manifest.json").read_text())
     assert run_manifest["dry_run"] is True
+    eval_report = json.loads((pipeline_env / "evaluation/results/ct_eval_report.json").read_text())
+    assert eval_report["ground_truth_available"] is False
+    assert "accuracy" not in eval_report["metrics"]
+
+
+def test_public_prediction_validation_accepts_three_field_entities(tmp_path):
+    from llm_local.pipeline.stages.evaluate import validate_predictions
+
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "output"
+    input_dir.mkdir()
+    output_dir.mkdir()
+    (input_dir / "1.txt").write_text("Bệnh nhân không sốt và đang dùng metformin.")
+    (output_dir / "1.json").write_text(
+        json.dumps(
+            [
+                {"text": "sốt", "type": "TRIỆU_CHỨNG", "assertions": ["isNegated"]},
+                {"text": "metformin", "type": "THUỐC", "assertions": []},
+            ],
+            ensure_ascii=False,
+        )
+    )
+
+    metrics, errors = validate_predictions(input_dir, output_dir)
+
+    assert errors == []
+    assert metrics["file_coverage"] == 1.0
+    assert metrics["schema_valid_file_rate"] == 1.0
+    assert metrics["valid_entity_rate"] == 1.0
+
+
+def test_public_prediction_validation_rejects_extra_model_fields(tmp_path):
+    from llm_local.pipeline.stages.evaluate import validate_predictions
+
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "output"
+    input_dir.mkdir()
+    output_dir.mkdir()
+    (input_dir / "1.txt").write_text("Bệnh nhân sốt.")
+    (output_dir / "1.json").write_text(
+        json.dumps(
+            [
+                {
+                    "text": "sốt",
+                    "type": "TRIỆU_CHỨNG",
+                    "assertions": [],
+                    "position": [10, 13],
+                }
+            ],
+            ensure_ascii=False,
+        )
+    )
+
+    metrics, errors = validate_predictions(input_dir, output_dir)
+
+    assert metrics["schema_valid_file_rate"] == 0.0
+    assert "requires exactly text, type, assertions" in errors[0]
+
+
+def test_evaluation_paths_must_be_repo_relative():
+    from llm_local.pipeline.stages.evaluate import repo_path
+
+    with pytest.raises(ValueError, match="repo-relative"):
+        repo_path("/tmp/non-portable-input")
+
+    assert repo_path("data/input") == ROOT / "data/input"
+
+
+def test_simulated_inference_runs_without_docker(tmp_path):
+    from llm_local.pipeline.unsloth_runner import run_unsloth_inference
+
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "output"
+    input_dir.mkdir()
+    (input_dir / "1.txt").write_text("Bệnh nhân sốt.")
+
+    count = run_unsloth_inference({}, input_dir=input_dir, output_dir=output_dir, simulate=True)
+
+    assert count == 1
+    assert (output_dir / "1.json").read_text() == "[]\n"
 
 
 def test_llm_local_pipeline_run_dry(tmp_path):

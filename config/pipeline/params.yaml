@@ -24,10 +24,13 @@ train:
   unsloth:
     container: unsloth
     script: /workspace/scripts/finetune_lora.py
+    inference_script: /workspace/scripts/predict_structured.py
     container_output_dir: /workspace/pipeline/models/artifacts/staging
 
 evaluate:
-  min_accuracy: 0.0
+  input_dir: data/input
+  output_dir: training/pipeline/evaluation/predictions
+  max_new_tokens: 2048
 
 register:
   release_prefix: rel-ct

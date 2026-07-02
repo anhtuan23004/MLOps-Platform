@@ -97,6 +97,22 @@ def check_training_pipeline(runner: ValidationRunner) -> None:
     runner.check("mlflow-genai.yaml exists", ["test", "-f", "config/mlflow-genai.yaml"])
     runner.check("tracing module syntax", [sys.executable, "-m", "py_compile", "llm_local/serving/tracing.py"])
     runner.check(
+        "structured inference script syntax",
+        [sys.executable, "-m", "py_compile", "training/unsloth/scripts/predict_structured.py"],
+    )
+    runner.check_python(
+        "medical extraction sample loads",
+        "from pathlib import Path; from llm_local.pipeline.dataset import read_jsonl; "
+        "assert read_jsonl(Path('training/pipeline/data/examples/medical-concept-extraction.sample.jsonl'), 'conversation')",
+    )
+    runner.check_python(
+        "evaluation paths are portable",
+        "from pathlib import Path; from ruamel.yaml import YAML; "
+        "p=YAML(typ='safe').load(Path('config/pipeline/params.yaml')); "
+        "assert not Path(p['evaluate']['input_dir']).is_absolute(); "
+        "assert not Path(p['evaluate']['output_dir']).is_absolute()",
+    )
+    runner.check(
         "training pipeline unit tests",
         [
             sys.executable,

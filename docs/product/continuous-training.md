@@ -5,6 +5,7 @@
 ```text
 Data change (DVC) or schedule (cron)
   -> dvc repro (prepare_data -> train -> evaluate -> register)
+  -> evaluate runs structured inference on data/input and validates predictions
   -> MLflow run + model version
   -> Release registry candidate (draft/candidate)
   -> (manual or automated) eval gates + promote to dev on GPU VM
@@ -77,3 +78,4 @@ See [`docs/runbooks/release-promotion-vm.md`](../runbooks/release-promotion-vm.m
 | S3 remote config template | implemented (US-003) |
 | Scheduler hook | implemented (US-003) |
 | Unsloth GPU training integration | implemented (US-004) |
+| Public-test structured inference | in progress (US-012; dry-run proof only) |
