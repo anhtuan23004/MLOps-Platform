@@ -62,6 +62,7 @@ See [`epics/E03-mlflow-genai/README.md`](epics/E03-mlflow-genai/README.md).
 | Story | Title | Status |
 | --- | --- | --- |
 | [US-012](epics/E05-medical-concept-retrieval/US-012-public-test-inference-validation.md) | Public-test structured inference validation | in_progress |
+| [US-013](epics/E05-medical-concept-retrieval/US-013-icd10-vn-vocabulary-crawl.md) | Reliable Vietnamese ICD-10 vocabulary crawl | implemented |
 
 ## Intake Notes
 
