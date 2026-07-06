@@ -134,11 +134,22 @@ def _node_from_payload(item: dict[str, Any]) -> TreeNode:
 
 
 def walk_diseases(edition: str, *, lang: str = "vi") -> Iterator[TreeNode]:
-    """Depth-first walk; yield disease nodes from the KCB tree API."""
-    for chapter in fetch_root(edition, lang=lang):
-        for section in fetch_children(edition, "chapter", chapter.node_id, lang=lang):
-            for type_node in fetch_children(edition, "section", section.node_id, lang=lang):
-                diseases = fetch_children(edition, "type", type_node.node_id, lang=lang)
-                for disease in diseases:
-                    if disease.model == "disease":
-                        yield disease
+    """Depth-first walk; yield every terminal code from the KCB tree API."""
+
+    def walk(parent: TreeNode) -> Iterator[TreeNode]:
+        for child in fetch_children(
+            edition,
+            parent.model,
+            parent.node_id,
+            lang=lang,
+        ):
+            if child.is_leaf:
+                yield child
+            else:
+                yield from walk(child)
+
+    for root in fetch_root(edition, lang=lang):
+        if root.is_leaf:
+            yield root
+        else:
+            yield from walk(root)

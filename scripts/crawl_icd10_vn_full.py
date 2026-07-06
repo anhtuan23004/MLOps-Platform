@@ -4,13 +4,16 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 from llm_local.catalog import ROOT
 from llm_local.ontology.icd10_tree import (
     EDITIONS,
+    ICD10_API_BASE,
     attach_english_label,
     walk_diseases,
 )
@@ -40,6 +43,21 @@ def load_rows(path: Path) -> dict[str, dict[str, object]]:
         row = json.loads(line)
         rows[str(row.get("id") or row.get("code"))] = row
     return rows
+
+
+def write_snapshot(path: Path, *, edition: str, mode: str) -> dict[str, object]:
+    metadata = {
+        "source": f"{ICD10_API_BASE}/{EDITIONS[edition]}",
+        "edition": edition,
+        "mode": mode,
+        "retrieved_at": datetime.now(timezone.utc).isoformat(),
+        "records": sum(bool(line.strip()) for line in path.read_text().splitlines()),
+        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+    }
+    path.with_suffix(".snapshot.json").write_text(
+        json.dumps(metadata, ensure_ascii=False, indent=2) + "\n"
+    )
+    return metadata
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -126,6 +144,7 @@ def main(argv: list[str] | None = None) -> int:
             "repaired": repaired,
             "errors": errors,
             "mode": "enrich-en",
+            "snapshot": write_snapshot(out_file, edition=args.edition, mode="bilingual"),
         }
         (out_dir / f"crawl-full-{args.edition}-report.json").write_text(
             json.dumps(report, ensure_ascii=False, indent=2) + "\n"
@@ -139,7 +158,8 @@ def main(argv: list[str] | None = None) -> int:
     skipped = 0
     errors = 0
 
-    with out_file.open("a" if args.resume else "w") as handle:
+    write_path = out_file if args.resume else out_file.with_suffix(out_file.suffix + ".tmp")
+    with write_path.open("a" if args.resume else "w") as handle:
         for disease in walk_diseases(args.edition, lang="vi"):
             if disease.node_id in seen or disease.code in seen:
                 skipped += 1
@@ -171,6 +191,9 @@ def main(argv: list[str] | None = None) -> int:
             if args.max and written >= args.max:
                 break
 
+    if not args.resume:
+        write_path.replace(out_file)
+
     report = {
         "edition": args.edition,
         "output": str(out_file.relative_to(ROOT)),
@@ -178,6 +201,11 @@ def main(argv: list[str] | None = None) -> int:
         "skipped": skipped,
         "errors": errors,
         "mode": "tree-bilingual" if args.bilingual else "tree-vi",
+        "snapshot": write_snapshot(
+            out_file,
+            edition=args.edition,
+            mode="bilingual" if args.bilingual else "vi",
+        ),
     }
     (out_dir / f"crawl-full-{args.edition}-report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2) + "\n"

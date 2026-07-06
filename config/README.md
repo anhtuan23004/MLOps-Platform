@@ -20,6 +20,7 @@ assets only.
 | `mlflow-genai.yaml` | Tracing / eval / prompt registry settings |
 | `prompts/medical-concept-extraction.system.txt` | English system prompt prose (VN entity labels) |
 | `prompts/medical-concept-extraction.schema.json` | Structural JSON Schema for model output |
+| `prompts/medical-concept-submission.schema.json` | Five-field JSON Schema after ontology enrichment |
 | `env/*.env.example` | Per-service environment templates |
 | `env/*.env` | Local overrides (gitignored; copy from `.example`) |
 | `active/serving.yaml` | Generated active preset state (gitignored) |

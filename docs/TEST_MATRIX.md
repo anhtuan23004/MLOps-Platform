@@ -31,6 +31,7 @@ exist.
 | US-011 | DVC subproject + S3 remote hardening | yes | yes | no | yes | planned | docs/stories/epics/E02-continuous-training/US-011-dvc-s3-remote-hardening/ |
 | US-012 | Public-test three-field inference and structural validation | yes | yes | no | no | in_progress | docs/stories/epics/E05-medical-concept-retrieval/US-012-public-test-inference-validation.md |
 | US-013 | Reliable Vietnamese ICD-10 vocabulary crawl and enrichment repair | yes | yes | no | no | implemented | docs/stories/epics/E05-medical-concept-retrieval/US-013-icd10-vn-vocabulary-crawl.md |
+| US-019 | Deterministic ICD-10/RxNorm final-output enrichment | yes | yes | no | no | in_progress | docs/stories/epics/E05-medical-concept-retrieval/US-019-ontology-output-enrichment.md |
 
 ## Evidence Rules
 

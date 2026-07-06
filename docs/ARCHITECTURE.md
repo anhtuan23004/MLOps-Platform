@@ -7,7 +7,8 @@ describes system shape and boundaries.
 
 Last aligned with: US-001 (lifecycle), US-002 (release registry), US-003
 (MLflow + DVC continuous training), US-004 (GPU train + Model Registry),
-US-005 (serving traces, in progress), and US-008 (LLM dataset loader, in progress).
+US-005 (serving traces, in progress), US-008 (LLM dataset loader, in progress),
+and US-019 (standalone medical output enrichment).
 
 ## Design goals
 
@@ -380,6 +381,12 @@ validates intermediate `text` / `type` / `assertions` predictions. Because the
 public input has no labels, this gate proves structure and coverage only; it
 does not claim accuracy or F1. Position and ontology candidates are separate
 downstream enrichment boundaries.
+
+US-019 implements that boundary as the standalone
+`scripts/enrich_medical_predictions.py` command. It reads the three-field
+prediction directory plus pinned local ICD-10/RxNorm snapshots and writes a
+separate five-field output directory. It is intentionally not wired into the
+CT evaluate stage while the competition candidate contract remains provisional.
 
 ### 2. Manual model onboarding
 
