@@ -1,0 +1,8 @@
+{
+  "source": "https://ccs.whiteneuron.com/api/ICD10_TT06",
+  "edition": "tt06",
+  "mode": "bilingual",
+  "retrieved_at": "2026-07-04T10:02:06.659408+00:00",
+  "records": 14286,
+  "sha256": "d17cbe6ef6b816579e2f441febbd67a82b2c1d8e9ef4d137d5fa8cf551de2130"
+}

@@ -1,0 +1,17 @@
+{
+  "source": "https://rxnav.nlm.nih.gov/REST/allconcepts.json",
+  "version": "01-Jun-2026",
+  "api_version": "3.1.353",
+  "retrieved_at": "2026-07-04T06:48:26.684927+00:00",
+  "term_types": [
+    "IN",
+    "MIN",
+    "PIN",
+    "BN",
+    "SCD",
+    "SBD"
+  ],
+  "records": 54480,
+  "sha256": "d50acd75dfe786ca57e047f24a9feea2c30ababee90517f043b99359942d32e7",
+  "license": "RxNorm normalized names and RXCUIs returned by RxNorm API; NLM public domain"
+}

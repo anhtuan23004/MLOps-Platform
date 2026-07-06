@@ -70,6 +70,8 @@ assembles the prompt for training samples and inference. The model must copy
 
 Deterministic, self-hosted enrichment adds `position` and ICD-10/RxNorm
 `candidates` after model inference; those fields are not LoRA training targets.
+The enrichment output always includes all five fields; unsupported entity types
+use an empty `candidates` array.
 
 | Field | Requirement |
 | --- | --- |
@@ -77,7 +79,7 @@ Deterministic, self-hosted enrichment adds `position` and ICD-10/RxNorm
 | `type` | Required closed-enum entity label |
 | `position` | Required two-integer character-offset list |
 | `assertions` | Required for diagnoses, drugs, and symptoms; empty when none apply |
-| `candidates` | ICD-10 strings for diagnoses; RxNorm strings for drugs; optional or empty for other types |
+| `candidates` | Required for every entity; ICD-10 strings for diagnoses; RxNorm strings for drugs; empty array for other types |
 
 ### Assertions
 
@@ -124,10 +126,33 @@ to the exact emitted `text`.
 - `CHẨN_ĐOÁN` candidates are ICD-10 codes represented as strings.
 - `THUỐC` candidates are RxNorm identifiers represented as strings.
 - Multiple candidates are ordered from highest to lowest confidence.
-- Other entity types may omit `candidates` or provide an empty list.
+- Other entity types must include `candidates` as an empty array.
 
 The accepted vocabulary snapshots, code variants, and candidate-count limit
 remain open organizer decisions.
+
+### Reproducible enrichment baseline
+
+The current offline baseline uses:
+
+- Vietnamese ICD-10 data exposed by the KCB TT06 tree, aligned with the coding
+  list effective under Circular 06/2026/TT-BYT.
+- NLM RxNorm `01-Jun-2026` active ingredient, brand, and semantic clinical drug
+  concepts (`IN`, `MIN`, `PIN`, `BN`, `SCD`, `SBD`) fetched from the official
+  RxNorm API.
+
+Run the standalone boundary after three-field prediction:
+
+```bash
+PYTHONPATH=. .venv/bin/python scripts/enrich_medical_predictions.py
+```
+
+It writes five-field JSON files under
+`training/pipeline/evaluation/submission-output/`. Exact source offsets are
+computed mechanically. ICD-10/RxNorm candidates are lexical retrieval results,
+not ground-truth labels or clinical coding decisions. Unmatched entities retain
+`"candidates": []` for later review. The default top-five limit is provisional
+until the organizer confirms candidate scoring and limits.
 
 ## Output and Submission Contract
 

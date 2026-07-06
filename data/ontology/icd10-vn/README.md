@@ -1,6 +1,7 @@
-# ICD-10 Vietnamese ↔ CDC ICD-10-CM mapping
+# Vietnamese ICD-10 vocabulary
 
-Crawled from the KCB / White Neuron tree API and compared against
+Crawled from the KCB / White Neuron tree API and compared against the official
+ICD-10 list attached to Circular 06/2026/TT-BYT and
 [CDC ICD-10-CM FY2027 code descriptions](../icd10cm/2027/).
 
 Public UI (song ngữ): https://icd.kcb.vn/icd-10-tt06/icd10-tt06-dual
@@ -58,10 +59,12 @@ to a VN parent code. CDC compact codes convert with `compact[:3] + '.' + compact
 3. Cross-check against CDC file when CM specificity is required.
 4. Emit `candidates` using **CDC code strings** for submission; attach VN label in metadata only.
 
-## TT06 vs ICD10 Versions (Vietnam)
+## TT06 vs ICD10 versions (Vietnam)
 
 There are two versions of the ICD-10 Vietnamese translation included:
-- `icd10-tt06-vi.jsonl`: **(Primary)** Based on Circular 06/2019/TT-BYT of the Ministry of Health of Vietnam. Contains 9,161 codes.
+- `icd10-tt06-vi.jsonl`: **Primary.** KCB's TT06 tree aligned with Circular
+  06/2026/TT-BYT, effective 2026-07-01. Snapshot row counts belong in crawl
+  evidence rather than this README.
 - `icd10-icd10-vi.jsonl`: Based on the original international ICD-10 translation. Contains 8,379 codes.
 
 **Key differences:**

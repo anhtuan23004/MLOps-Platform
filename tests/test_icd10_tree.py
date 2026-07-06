@@ -7,7 +7,12 @@ import urllib.error
 import pytest
 
 from llm_local.ontology import icd10_tree
-from llm_local.ontology.icd10_tree import TreeNode, attach_english_label, edition_prefix
+from llm_local.ontology.icd10_tree import (
+    TreeNode,
+    attach_english_label,
+    edition_prefix,
+    walk_diseases,
+)
 from scripts import crawl_icd10_vn_full
 
 
@@ -19,6 +24,28 @@ def test_edition_prefix():
 def test_tree_node_shape():
     node = TreeNode(model="disease", node_id="A000", code="A00.0", name="Bệnh tả", is_leaf=True)
     assert node.code == "A00.0"
+
+
+def test_walk_includes_terminal_codes_at_any_tree_level(monkeypatch):
+    chapter = TreeNode("chapter", "IX", "IX", "Circulatory", False)
+    section = TreeNode("section", "I10", "I10", "Hypertensive diseases", False)
+    terminal_type = TreeNode("type", "I10", "I10", "Essential hypertension", True)
+    nonterminal_type = TreeNode("type", "I11", "I11", "Hypertensive heart disease", False)
+    disease = TreeNode("disease", "I119", "I11.9", "Without heart failure", True)
+    children = {
+        ("chapter", "IX"): [section],
+        ("section", "I10"): [terminal_type, nonterminal_type],
+        ("type", "I11"): [disease],
+    }
+
+    monkeypatch.setattr(icd10_tree, "fetch_root", lambda *_args, **_kwargs: [chapter])
+    monkeypatch.setattr(
+        icd10_tree,
+        "fetch_children",
+        lambda _edition, model, node_id, **_kwargs: children[(model, node_id)],
+    )
+
+    assert list(walk_diseases("tt06")) == [terminal_type, disease]
 
 
 def test_request_json_normalizes_url_error(monkeypatch):
@@ -93,6 +120,12 @@ def test_enrich_resume_repairs_failed_rows_without_duplicates(tmp_path, monkeypa
     assert result[0]["label_en"] == "Cholera"
     assert result[1]["label_en"] == "Salmonella sepsis"
     assert "fetch_error" not in result[1]
+    snapshot = json.loads(
+        bilingual_file.with_suffix(".snapshot.json").read_text()
+    )
+    assert snapshot["records"] == 2
+    assert snapshot["edition"] == "tt06"
+    assert len(snapshot["sha256"]) == 64
 
     checkpoint = bilingual_file.with_suffix(bilingual_file.suffix + ".tmp")
     checkpoint.write_text(bilingual_file.read_text())
