@@ -1,9 +1,62 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mlflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mlflow}
+      POSTGRES_DB: ${POSTGRES_DB:-mlflow}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - llm-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mlflow} -d ${POSTGRES_DB:-mlflow}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-mlops}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-mlops-secret}
+    ports:
+      - "${MINIO_HOST_PORT:-19000}:9000"
+      - "${MINIO_CONSOLE_PORT:-19001}:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - llm-net
+    restart: unless-stopped
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-mlops}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-mlops-secret}
+      MLFLOW_S3_BUCKET: ${MLFLOW_S3_BUCKET:-mlops-platform}
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD; do sleep 2; done;
+      mc mb local/$$MLFLOW_S3_BUCKET --ignore-existing;
+      "
+    networks:
+      - llm-net
+
   mlflow:
     build:
       context: .
       dockerfile: Dockerfile
     image: mlops-platform/mlflow:3-boto3
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
     command:
       - server
       - --host
@@ -28,6 +81,10 @@ services:
     networks:
       - llm-net
     restart: unless-stopped
+
+volumes:
+  postgres_data:
+  minio_data:
 
 networks:
   llm-net:
