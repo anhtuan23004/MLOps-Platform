@@ -311,6 +311,70 @@ MLOps-Platform/
 └── docs/                   # Harness, product contracts, stories, ADRs
 ```
 
+## Modular monorepo shape
+
+The repository is intentionally a **modular monorepo**. Keep one repo until a
+folder has a different owner, release cadence, access boundary, or deployment
+lifecycle. See
+[`docs/decisions/003-modular-monorepo-before-repo-split.md`](decisions/003-modular-monorepo-before-repo-split.md).
+
+```mermaid
+flowchart TB
+  subgraph repo [MLOps-Platform monorepo]
+    docs[docs/<br/>contracts, stories, runbooks]
+    config[config/<br/>operator-tunable settings]
+    control[llm_local/<br/>control plane package]
+    workloads[training/ serving/ evaluation/ observation/<br/>runtime workload definitions]
+    state[data/ models/<br/>local state and large artifacts]
+    tests[tests/<br/>contract and integration proof]
+  end
+
+  docs --> control
+  config --> control
+  control --> workloads
+  workloads --> state
+  tests --> control
+  tests --> workloads
+
+  classDef contract fill:#f8fafc,stroke:#64748b,color:#0f172a
+  classDef control fill:#dbeafe,stroke:#2563eb,color:#172554
+  classDef workload fill:#ffedd5,stroke:#ea580c,color:#431407
+  classDef state fill:#f3e8ff,stroke:#9333ea,color:#3b0764
+
+  class docs,config,tests contract
+  class control control
+  class workloads workload
+  class state state
+```
+
+Folder ownership rules:
+
+| Folder | Owns | Should not own |
+| --- | --- | --- |
+| `llm_local/` | Control-plane behavior, programmatic interfaces, CLI internals, validation logic | Docker Compose files, local datasets, model weights |
+| `config/` | Runtime catalog, env templates, pipeline parameters, prompt schemas | Generated local state or secrets |
+| `training/`, `serving/`, `evaluation/`, `observation/` | Workload compose files, Dockerfiles, scripts, dashboards, rules | Shared Python business logic |
+| `docs/` | Product contracts, stories, decisions, runbooks, validation expectations | Runtime state or generated reports unless linked as evidence |
+| `data/`, `models/` | Local datasets, release records, ontology snapshots, model weights | Durable product truth without a manifest, DVC, MLflow, or release record |
+| `tests/` | Proof for control-plane interfaces and workload contracts | Production behavior not represented in product docs |
+
+Future repo split path, if needed:
+
+```mermaid
+flowchart LR
+  contracts[product contracts repo<br/>docs/product + stories + runbooks]
+  control[control plane repo<br/>llm_local + CLI + tests]
+  runtime[runtime infra repo<br/>compose or deployment templates]
+  domain[domain assets repo<br/>prompts, ontology, datasets]
+
+  contracts --> control
+  control --> runtime
+  domain --> control
+```
+
+Do not create a new top-level folder unless it maps to one of these ownership
+seams or a selected story adds a new product domain.
+
 ## Technology stack
 
 
