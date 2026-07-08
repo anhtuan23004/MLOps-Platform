@@ -281,28 +281,35 @@ three-field generative output until the assertion stage and JSON adapter exist.
 Qwen is a better direct match for the current SFT contract because it can emit
 the complete JSON array and infer assertions from document-level context.
 
-Two self-hosted checkpoints are relevant:
+Detailed comparison: [Qwen2.5 vs Qwen3 vs Qwen3.5 for text-only SFT](research/qwen-text-model-comparison.md).
+The first experiments are text-only; vision fine-tuning is intentionally deferred.
 
-- [`Qwen3-8B`](https://huggingface.co/Qwen/Qwen3-8B): 8.2B parameters,
-  Apache-2.0, 32K native context, and official support for
-  [119 languages and dialects](https://qwenlm.github.io/blog/qwen3/) including
-  Vietnamese. It stays below the competition's 9B limit.
-- [`Qwen3.5-9B`](https://huggingface.co/Qwen/Qwen3.5-9B): a newer 9B
-  vision-language model with a 262K native context. It sits exactly on the
-  stated limit and includes a vision encoder, so eligibility depends on how the
-  organizer counts total parameters. Do not select it without written rule
-  confirmation.
+Three self-hosted Qwen3.5 checkpoints remain below the competition limit when
+the full artifact, including its vision encoder, is counted:
 
-For a text-only submission, `Qwen3-8B` is the safer initial candidate. A hosted
-Qwen model from Model Studio can still serve as the external teacher; teacher
-size is separate from submitted-model eligibility only if the competition-rule
-interpretation explicitly permits external offline data generation.
+- [`Qwen3.5-0.8B`](https://huggingface.co/Qwen/Qwen3.5-0.8B): smoke-test model.
+- [`Qwen3.5-2B`](https://huggingface.co/Qwen/Qwen3.5-2B): low-cost baseline.
+- [`Qwen3.5-4B`](https://huggingface.co/Qwen/Qwen3.5-4B): Qwen3.5 family
+  candidate; the official collection reports about 5B for the full artifact.
+
+Do not select `Qwen3.5-9B`: the official collection reports about 10B for the
+full artifact, and the language model's nominal 9B also fails a strict `< 9B`
+rule. Start with BF16 LoRA rather than the current 4-bit QLoRA path; Unsloth's
+Qwen3.5 guide warns that 4-bit fine-tuning has higher-than-normal quantization
+differences.
+
+Across text-model families, benchmark `Qwen3-8B` as the max-quality candidate,
+`Qwen3-4B-Instruct-2507` as the first practical candidate, and
+`Qwen2.5-7B-Instruct` as the stable JSON-focused control. Keep Qwen3.5-4B as a
+BF16 LoRA challenger after the Transformers v5 path is proven.
 
 Qwen advantages:
 
 - Produces the complete `text`/`type`/`assertions` schema in one pass.
 - Uses wider document context for family, negation, and history cues.
-- Fits the existing LoRA, vLLM, conversation JSONL, and structured-prompt path.
+- Fits the existing conversation JSONL and structured-prompt contract; the
+  current LoRA loader and vLLM configuration still require Qwen3.5-specific
+  changes documented in the detailed research.
 
 Qwen risks:
 
@@ -329,7 +336,8 @@ Evaluate four paths on the same frozen gold set:
 
 1. Zero-shot `gliner_multi-v2.1` for span/type extraction.
 2. Fine-tuned GLiNER plus deterministic assertion rules.
-3. Qwen3-8B SFT producing the current JSON contract.
+3. Text-only SFT matrix for Qwen3-8B, Qwen3-4B-Instruct-2507,
+   Qwen2.5-7B-Instruct, and Qwen3.5-4B using the current JSON contract.
 4. Hybrid: GLiNER proposes spans/types; Qwen sees only proposed spans and local
    context to assign assertions; deterministic code builds final JSON.
 
@@ -511,8 +519,8 @@ is not a success criterion.
   self-hosted; the current product contract still states a broader API ban.
 - Which OpenAI, Gemini, or hosted Qwen model/version wins on Vietnamese clinical
   generation quality, latency, and cost.
-- Whether the organizer counts the Qwen3.5-9B vision encoder toward the 9B
-  submitted-model limit.
+- Whether the organizer counts the full Qwen3.5 artifact or only its language
+  backbone; the recommended 4B checkpoint remains below 9B either way.
 - Who reviews the gold set and what inter-annotator agreement is required.
 - Which external corpora have sufficient rights for training and redistribution.
 - Required minimum coverage per entity type, assertion, and document-length bin.

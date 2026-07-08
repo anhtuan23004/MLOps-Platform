@@ -1,0 +1,29 @@
+services:
+  model:
+    image: anhtuan23004/viettel-qwen35:round1
+    entrypoint:
+      - python3
+      - -m
+      - vllm.entrypoints.openai.api_server
+    command:
+      - --model=/model
+      - --served-model-name=Qwen3.5-2B
+      - --host=0.0.0.0
+      - --port=8000
+      - --tensor-parallel-size=1
+      - --language-model-only
+      - --max-model-len=28672
+      - --gpu-memory-utilization=0.93
+      - --max-num-batched-tokens=4096
+      - --max-num-seqs=24
+      - --enable-prefix-caching
+    ports:
+      - "8000:8000"
+    shm_size: "2g"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
