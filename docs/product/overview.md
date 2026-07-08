@@ -29,6 +29,8 @@ Human intent / model change
   -> Observation and rollback
 ```
 
+Visual workflow and tech stack: [`mlops-workflow.md`](mlops-workflow.md).
+
 ## Current State
 
 This repo starts with inherited local LLM infrastructure and a blank harness.

@@ -1,5 +1,4 @@
-FROM dhi.io/mlflow:3
+FROM ghcr.io/mlflow/mlflow:v3.14.0-full
 
-USER 0
-RUN ["python", "-m", "pip", "install", "--no-cache-dir", "boto3"]
 USER 65532
+ENTRYPOINT ["mlflow"]

@@ -20,3 +20,8 @@ When behavior changes:
 3. Update `docs/TEST_MATRIX.md`.
 4. Record a decision if the change affects architecture, scope, risk, or a
    previously settled product rule.
+
+## Visual Map
+
+- [`mlops-workflow.md`](mlops-workflow.md): end-to-end MLOps flow with the
+  current tech stack.
